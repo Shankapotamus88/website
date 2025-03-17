@@ -1,6 +1,10 @@
 body {
-    background-color: #000;
-    color: #333;
+    background-image: url('images/Glass of Water.png'); /* Path to image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: white;
     font-family: 'Arial', sans-serif;
 }
 
