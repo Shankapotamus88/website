@@ -18,9 +18,20 @@
             right: 1rem; /* 1rem = 16px from the right */
             width: 20rem; /* Scales to 320px */
             height: auto;
+            background: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+            color: white;
+            padding: 1rem;
+            border-radius: 0.625rem; /* Rounded corners */
+            text-align: center;
+            font-family: Arial, sans-serif;
         }
 
-        /* Make the widget responsive */
+        /* Hide widget until it's fully loaded */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .weather-container {
                 width: 18rem;
@@ -40,8 +51,8 @@
     <h1>Welcome to My Website</h1>
     <p>I am just learning.</p>
 
-    <!-- Weather Widget -->
-    <div class="weather-container">
+    <!-- Weather Widget Container -->
+    <div class="weather-container hidden" id="weather-container">
         <a id="weather-widget" class="weatherwidget-io"
            href="https://forecast7.com/en/40d71n74d01/new-york/"
            data-label_1="NEW YORK"
@@ -54,6 +65,7 @@
     <script>
         function updateWeatherWidget(lat, lon) {
             let weatherWidget = document.getElementById("weather-widget");
+            let weatherContainer = document.getElementById("weather-container");
             let url = `https://forecast7.com/en/${lat.toFixed(2)}d${lon.toFixed(2)}/`;
 
             // Update weather widget URL
@@ -67,11 +79,18 @@
                 oldScript.remove();
             }
 
-            // Re-add the weather widget script to refresh
-            let newScript = document.createElement("script");
-            newScript.src = "https://weatherwidget.io/js/widget.min.js";
-            newScript.id = "weatherwidget-io-js";
-            document.body.appendChild(newScript);
+            // Add a short delay to let the widget refresh properly
+            setTimeout(() => {
+                let newScript = document.createElement("script");
+                newScript.src = "https://weatherwidget.io/js/widget.min.js";
+                newScript.id = "weatherwidget-io-js";
+                document.body.appendChild(newScript);
+
+                // Show the weather container after the script loads
+                newScript.onload = () => {
+                    weatherContainer.classList.remove("hidden");
+                };
+            }, 1000);
         }
 
         // Get user's location
@@ -84,10 +103,12 @@
                 },
                 () => {
                     console.warn("Geolocation blocked. Using default location.");
+                    document.getElementById("weather-container").classList.remove("hidden"); // Show default widget
                 }
             );
         } else {
             console.warn("Geolocation not supported. Using default location.");
+            document.getElementById("weather-container").classList.remove("hidden");
         }
     </script>
 
