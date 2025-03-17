@@ -3,25 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather Widget without Sign Up</title>
+  <title>My Weather Page</title>
+  <!-- External CSS file loaded first -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- Additional styles specific to the weather widget -->
   <style>
-    html {
-      font-size: 16px;
-    }
-    /* Weather widget container styling */
     .weather-container {
       position: absolute;
-      top: 1rem;    /* 16px from the top */
-      right: 1rem;  /* 16px from the right */
-      width: 20rem; /* Approximately 320px */
-      background: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
+      top: 1rem;
+      right: 1rem;
+      width: 20rem;
+      background: rgba(0, 0, 0, 0.8);
       color: white;
       padding: 1rem;
-      border-radius: 0.625rem; /* Rounded corners */
-      font-family: Arial, sans-serif;
+      border-radius: 0.625rem;
       text-align: center;
+      font-family: Arial, sans-serif;
     }
-    /* Hide widget until loaded */
     .hidden {
       display: none;
     }
@@ -38,7 +36,7 @@
   </div>
 
   <script>
-    // Display the weather data in the widget
+    // Display weather information once data is fetched
     function displayWeather(data) {
       const container = document.getElementById("weather-container");
       const weatherInfo = document.getElementById("weather-info");
@@ -46,7 +44,6 @@
       if (weather) {
         const temperature = weather.temperature;
         const windspeed = weather.windspeed;
-        // Update the container with weather info
         weatherInfo.innerHTML = `Temperature: ${temperature}°C<br>Windspeed: ${windspeed} km/h`;
       } else {
         weatherInfo.innerText = "Unable to retrieve weather data.";
@@ -67,7 +64,7 @@
         });
     }
 
-    // Get user's location or use a default (New York)
+    // Attempt to load weather data using geolocation, fallback to New York if needed
     function loadWeather() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -78,12 +75,12 @@
           },
           (error) => {
             console.warn("Geolocation error:", error);
-            // Fallback: New York City coordinates
+            // Fallback coordinates (New York City)
             fetchWeather(40.7128, -74.0060);
           }
         );
       } else {
-        // Geolocation not supported; use default location.
+        // Geolocation not supported
         fetchWeather(40.7128, -74.0060);
       }
     }
