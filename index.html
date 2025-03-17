@@ -1,116 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Styled Page</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Base font size for rem scaling */
-        html {
-            font-size: 16px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Styled Page</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Base font size for rem scaling */
+    html {
+      font-size: 16px;
+    }
 
-        /* Weather widget container */
-        .weather-container {
-            position: absolute;
-            top: 1rem;   /* 1rem = 16px from the top */
-            right: 1rem; /* 1rem = 16px from the right */
-            width: 20rem; /* Scales to 320px */
-            height: auto;
-            background: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
-            color: white;
-            padding: 1rem;
-            border-radius: 0.625rem; /* Rounded corners */
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
+    /* Weather widget container */
+    .weather-container {
+      position: absolute;
+      top: 1rem;   /* 1rem = 16px from the top */
+      right: 1rem; /* 1rem = 16px from the right */
+      width: 20rem; /* Scales to 320px */
+      height: auto;
+      background: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+      color: white;
+      padding: 1rem;
+      border-radius: 0.625rem; /* Rounded corners */
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
 
-        /* Hide widget until it's fully loaded */
-        .hidden {
-            display: none;
-        }
+    /* Hide widget until it's fully loaded */
+    .hidden {
+      display: none;
+    }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .weather-container {
-                width: 18rem;
-                top: 0.5rem;
-                right: 0.5rem;
-            }
-        }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .weather-container {
+        width: 18rem;
+        top: 0.5rem;
+        right: 0.5rem;
+      }
+    }
 
-        @media (max-width: 480px) {
-            .weather-container {
-                width: 16rem;
-            }
-        }
-    </style>
+    @media (max-width: 480px) {
+      .weather-container {
+        width: 16rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
-    <p>I am just learning.</p>
+  <h1>Welcome to My Website</h1>
+  <p>I am just learning.</p>
 
-    <!-- Weather Widget Container -->
-    <div class="weather-container hidden" id="weather-container">
-        <a id="weather-widget" class="weatherwidget-io"
-           href="https://forecast7.com/en/40d71n74d01/new-york/"
-           data-label_1="NEW YORK"
-           data-label_2="WEATHER"
-           data-theme="dark">
-           Loading Weather...
-        </a>
-    </div>
+  <!-- Weather Widget Container -->
+  <div class="weather-container hidden" id="weather-container">
+    <a id="weather-widget" class="weatherwidget-io"
+       href="https://forecast7.com/en/40d71n74d01/new-york/"
+       data-label_1="NEW YORK"
+       data-label_2="WEATHER"
+       data-theme="dark">
+       Loading Weather...
+    </a>
+  </div>
 
-    <script>
-        function updateWeatherWidget(lat, lon) {
-            let weatherWidget = document.getElementById("weather-widget");
-            let weatherContainer = document.getElementById("weather-container");
-            let url = `https://forecast7.com/en/${lat.toFixed(2)}d${lon.toFixed(2)}/`;
+  <script>
+    function updateWeatherWidget(lat, lon) {
+      let weatherWidget = document.getElementById("weather-widget");
+      let weatherContainer = document.getElementById("weather-container");
 
-            // Update weather widget URL
-            weatherWidget.href = url;
-            weatherWidget.setAttribute("data-label_1", "YOUR WEATHER");
-            weatherWidget.innerText = "Updating weather...";
+      // Determine directional markers for coordinates
+      let latDirection = lat >= 0 ? 'n' : 's';
+      let lonDirection = lon >= 0 ? 'e' : 'w';
 
-            // Remove old script if it exists
-            let oldScript = document.getElementById("weatherwidget-io-js");
-            if (oldScript) {
-                oldScript.remove();
-            }
+      // Format coordinates to two decimal places and use absolute values
+      let formattedLat = Math.abs(lat).toFixed(2);
+      let formattedLon = Math.abs(lon).toFixed(2);
 
-            // Add a short delay to let the widget refresh properly
-            setTimeout(() => {
-                let newScript = document.createElement("script");
-                newScript.src = "https://weatherwidget.io/js/widget.min.js";
-                newScript.id = "weatherwidget-io-js";
-                document.body.appendChild(newScript);
+      // Build the URL: for example, "https://forecast7.com/en/40.71n74.01w/"
+      let url = `https://forecast7.com/en/${formattedLat}${latDirection}${formattedLon}${lonDirection}/`;
 
-                // Show the weather container after the script loads
-                newScript.onload = () => {
-                    weatherContainer.classList.remove("hidden");
-                };
-            }, 1000);
+      // Update the widget's attributes
+      weatherWidget.href = url;
+      weatherWidget.setAttribute("data-label_1", "YOUR WEATHER");
+      weatherWidget.innerText = "Updating weather...";
+
+      // Remove the old script if it exists
+      let oldScript = document.getElementById("weatherwidget-io-js");
+      if (oldScript) {
+        oldScript.remove();
+      }
+
+      // Create and append the new widget script
+      let newScript = document.createElement("script");
+      newScript.src = "https://weatherwidget.io/js/widget.min.js";
+      newScript.id = "weatherwidget-io-js";
+      newScript.onload = () => {
+        weatherContainer.classList.remove("hidden");
+      };
+      document.body.appendChild(newScript);
+    }
+
+    function loadDefaultWidget() {
+      let weatherContainer = document.getElementById("weather-container");
+      weatherContainer.classList.remove("hidden");
+
+      // Load the widget script if it isn't already loaded
+      if (!document.getElementById("weatherwidget-io-js")) {
+        let defaultScript = document.createElement("script");
+        defaultScript.src = "https://weatherwidget.io/js/widget.min.js";
+        defaultScript.id = "weatherwidget-io-js";
+        document.body.appendChild(defaultScript);
+      }
+    }
+
+    // Check for geolocation support and update widget accordingly
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          let lat = position.coords.latitude;
+          let lon = position.coords.longitude;
+          updateWeatherWidget(lat, lon);
+        },
+        (error) => {
+          console.warn("Geolocation error or denied. Using default location.", error);
+          loadDefaultWidget();
         }
-
-        // Get user's location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    let lat = position.coords.latitude;
-                    let lon = position.coords.longitude;
-                    updateWeatherWidget(lat, lon);
-                },
-                () => {
-                    console.warn("Geolocation blocked. Using default location.");
-                    document.getElementById("weather-container").classList.remove("hidden"); // Show default widget
-                }
-            );
-        } else {
-            console.warn("Geolocation not supported. Using default location.");
-            document.getElementById("weather-container").classList.remove("hidden");
-        }
-    </script>
+      );
+    } else {
+      console.warn("Geolocation not supported. Using default location.");
+      loadDefaultWidget();
+    }
+  </script>
 
 </body>
 </html>
