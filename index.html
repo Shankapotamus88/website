@@ -6,49 +6,32 @@
     <title>My Styled Page</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Set base font size for rem scaling */
+        /* Base font size for rem scaling */
         html {
-            font-size: 16px; /* 1rem = 16px */
+            font-size: 16px;
         }
 
-        /* Positioning the weather widget in the top-right corner */
-        .weather-widget {
+        /* Weather widget container */
+        .weather-container {
             position: absolute;
             top: 1rem;   /* 1rem = 16px from the top */
             right: 1rem; /* 1rem = 16px from the right */
-            width: 22rem;  /* Scales to 352px (22 * 16) */
-            height: 12.5rem; /* Scales to 200px (12.5 * 16) */
-            border: none;
-            border-radius: 0.625rem; /* 10px rounded corners */
-        }
-
-        /* Ensuring page content does not overlap the iframe */
-        body {
-            padding-top: 14rem; /* Pushes content down to prevent overlap */
+            width: 20rem; /* Scales to 320px */
+            height: auto;
         }
 
         /* Make the widget responsive */
         @media (max-width: 768px) {
-            .weather-widget {
-                width: 18rem; /* Scales down for smaller screens */
-                height: 10rem;
+            .weather-container {
+                width: 18rem;
                 top: 0.5rem;
                 right: 0.5rem;
-            }
-            body {
-                padding-top: 12rem;
             }
         }
 
         @media (max-width: 480px) {
-            .weather-widget {
-                width: 16rem; /* Further scaling for mobile screens */
-                height: 9rem;
-                top: 0.5rem;
-                right: 0.5rem;
-            }
-            body {
-                padding-top: 11rem;
+            .weather-container {
+                width: 16rem;
             }
         }
     </style>
@@ -57,12 +40,26 @@
     <h1>Welcome to My Website</h1>
     <p>I am just learning.</p>
 
-    <!-- Weather Widget iframe positioned in the top-right corner -->
-    <iframe 
-        class="weather-widget" 
-        src="https://forecast7.com/en/40d71n74d01/new-york/" 
-        frameborder="0">
-    </iframe>
+    <!-- Weather Widget -->
+    <div class="weather-container">
+        <a class="weatherwidget-io" href="https://forecast7.com/en/40d71n74d01/new-york/" 
+           data-label_1="NEW YORK" 
+           data-label_2="WEATHER" 
+           data-theme="dark">
+           New York Weather
+        </a>
+    </div>
+
+    <script>
+        !function(d,s,id){
+            var js,fjs=d.getElementsByTagName(s)[0];
+            if(!d.getElementById(id)){
+                js=d.createElement(s);
+                js.id=id;js.src="https://weatherwidget.io/js/widget.min.js";
+                fjs.parentNode.insertBefore(js,fjs);
+            }
+        }(document,"script","weatherwidget-io-js");
+    </script>
 
 </body>
 </html>
