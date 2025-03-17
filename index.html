@@ -42,23 +42,47 @@
 
     <!-- Weather Widget -->
     <div class="weather-container">
-        <a class="weatherwidget-io" href="https://forecast7.com/en/40d71n74d01/new-york/" 
+        <a id="weather-widget" class="weatherwidget-io" 
+           href="https://forecast7.com/en/40d71n74d01/new-york/" 
            data-label_1="NEW YORK" 
            data-label_2="WEATHER" 
            data-theme="dark">
-           New York Weather
+           Loading Weather...
         </a>
     </div>
 
     <script>
-        !function(d,s,id){
-            var js,fjs=d.getElementsByTagName(s)[0];
-            if(!d.getElementById(id)){
-                js=d.createElement(s);
-                js.id=id;js.src="https://weatherwidget.io/js/widget.min.js";
-                fjs.parentNode.insertBefore(js,fjs);
-            }
-        }(document,"script","weatherwidget-io-js");
+        // Function to get user's location
+        function updateWeatherWidget(lat, lon) {
+            let weatherWidget = document.getElementById("weather-widget");
+            let url = `https://forecast7.com/en/${lat.toFixed(2)}d${lon.toFixed(2)}/`;
+
+            weatherWidget.href = url; // Update weather link
+            weatherWidget.setAttribute("data-label_1", "LOCAL WEATHER");
+            weatherWidget.innerText = "Loading local weather...";
+            
+            // Reload widget script
+            let script = document.createElement("script");
+            script.src = "https://weatherwidget.io/js/widget.min.js";
+            script.id = "weatherwidget-io-js";
+            document.body.appendChild(script);
+        }
+
+        // Get user's location using Geolocation API
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+                    updateWeatherWidget(lat, lon);
+                },
+                () => {
+                    console.warn("Geolocation blocked. Using default location.");
+                }
+            );
+        } else {
+            console.warn("Geolocation not supported. Using default location.");
+        }
     </script>
 
 </body>
