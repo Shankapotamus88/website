@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Styled Page with AccuWeather Widget</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Widget without Sign Up</title>
   <style>
     html {
       font-size: 16px;
@@ -11,28 +11,19 @@
     /* Weather widget container styling */
     .weather-container {
       position: absolute;
-      top: 1rem;   /* 16px from top */
-      right: 1rem; /* 16px from right */
+      top: 1rem;    /* 16px from the top */
+      right: 1rem;  /* 16px from the right */
       width: 20rem; /* Approximately 320px */
-      background: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+      background: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
       color: white;
       padding: 1rem;
       border-radius: 0.625rem; /* Rounded corners */
-      text-align: center;
       font-family: Arial, sans-serif;
+      text-align: center;
     }
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .weather-container {
-        width: 18rem;
-        top: 0.5rem;
-        right: 0.5rem;
-      }
-    }
-    @media (max-width: 480px) {
-      .weather-container {
-        width: 16rem;
-      }
+    /* Hide widget until loaded */
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -41,18 +32,63 @@
   <p>I am just learning.</p>
 
   <!-- Weather Widget Container -->
-  <div class="weather-container" id="weather-container">
-    <!-- AccuWeather Widget Begin -->
-    <div id="awcc1505016752458" class="aw-widget-current" 
-         data-locationkey="" 
-         data-unit="f" 
-         data-language="en-us" 
-         data-useip="true" 
-         data-uid="awcc1505016752458">
-    </div>
-    <script type="text/javascript" src="https://oap.accuweather.com/launch.js"></script>
-    <!-- AccuWeather Widget End -->
+  <div id="weather-container" class="weather-container hidden">
+    <h2>Current Weather</h2>
+    <p id="weather-info">Loading weather data...</p>
   </div>
 
+  <script>
+    // Display the weather data in the widget
+    function displayWeather(data) {
+      const container = document.getElementById("weather-container");
+      const weatherInfo = document.getElementById("weather-info");
+      const weather = data.current_weather;
+      if (weather) {
+        const temperature = weather.temperature;
+        const windspeed = weather.windspeed;
+        // Update the container with weather info
+        weatherInfo.innerHTML = `Temperature: ${temperature}°C<br>Windspeed: ${windspeed} km/h`;
+      } else {
+        weatherInfo.innerText = "Unable to retrieve weather data.";
+      }
+      container.classList.remove("hidden");
+    }
+
+    // Fetch weather data from Open-Meteo
+    function fetchWeather(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => displayWeather(data))
+        .catch(err => {
+          console.error("Error fetching weather data:", err);
+          document.getElementById("weather-info").innerText = "Error loading weather data.";
+          document.getElementById("weather-container").classList.remove("hidden");
+        });
+    }
+
+    // Get user's location or use a default (New York)
+    function loadWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            fetchWeather(lat, lon);
+          },
+          (error) => {
+            console.warn("Geolocation error:", error);
+            // Fallback: New York City coordinates
+            fetchWeather(40.7128, -74.0060);
+          }
+        );
+      } else {
+        // Geolocation not supported; use default location.
+        fetchWeather(40.7128, -74.0060);
+      }
+    }
+
+    loadWeather();
+  </script>
 </body>
 </html>
