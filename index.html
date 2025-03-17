@@ -42,33 +42,39 @@
 
     <!-- Weather Widget -->
     <div class="weather-container">
-        <a id="weather-widget" class="weatherwidget-io" 
-           href="https://forecast7.com/en/40d71n74d01/new-york/" 
-           data-label_1="NEW YORK" 
-           data-label_2="WEATHER" 
+        <a id="weather-widget" class="weatherwidget-io"
+           href="https://forecast7.com/en/40d71n74d01/new-york/"
+           data-label_1="NEW YORK"
+           data-label_2="WEATHER"
            data-theme="dark">
            Loading Weather...
         </a>
     </div>
 
     <script>
-        // Function to get user's location
         function updateWeatherWidget(lat, lon) {
             let weatherWidget = document.getElementById("weather-widget");
             let url = `https://forecast7.com/en/${lat.toFixed(2)}d${lon.toFixed(2)}/`;
 
-            weatherWidget.href = url; // Update weather link
-            weatherWidget.setAttribute("data-label_1", "LOCAL WEATHER");
-            weatherWidget.innerText = "Loading local weather...";
-            
-            // Reload widget script
-            let script = document.createElement("script");
-            script.src = "https://weatherwidget.io/js/widget.min.js";
-            script.id = "weatherwidget-io-js";
-            document.body.appendChild(script);
+            // Update weather widget URL
+            weatherWidget.href = url;
+            weatherWidget.setAttribute("data-label_1", "YOUR WEATHER");
+            weatherWidget.innerText = "Updating weather...";
+
+            // Remove old script if it exists
+            let oldScript = document.getElementById("weatherwidget-io-js");
+            if (oldScript) {
+                oldScript.remove();
+            }
+
+            // Re-add the weather widget script to refresh
+            let newScript = document.createElement("script");
+            newScript.src = "https://weatherwidget.io/js/widget.min.js";
+            newScript.id = "weatherwidget-io-js";
+            document.body.appendChild(newScript);
         }
 
-        // Get user's location using Geolocation API
+        // Get user's location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
