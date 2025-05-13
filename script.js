@@ -1,3 +1,4 @@
+// script.js
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
@@ -24,12 +25,10 @@ function gameLoop() {
 function update() {
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
 
-  // check wall‐hits and self‐hits (ignoring the old head at index 0)
-  if (
-    head.x < 0 || head.y < 0 ||
-    head.x >= tileCount || head.y >= tileCount ||
-    snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y)
-  ) {
+  // Check for wall collisions or self collisions (ignoring the current head at index 0)
+  const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
+  const hitSelf = snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y);
+  if (hitWall || hitSelf) {
     alert(`Game Over! Score: ${score}`);
     snake = [{ x: 10, y: 10 }];
     vel   = { x: 0, y: 0 };
@@ -40,7 +39,7 @@ function update() {
 
   snake.unshift(head);
 
-  // eat food?
+  // Eat food
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
@@ -50,17 +49,19 @@ function update() {
 }
 
 function draw() {
+  // Clear canvas
   ctx.fillStyle = '#222';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Draw snake
   ctx.fillStyle = 'lime';
-  snake.forEach(s => {
-    ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize);
-  });
+  snake.forEach(s => ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize));
 
+  // Draw food
   ctx.fillStyle = 'red';
   ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
 
+  // Draw score
   ctx.fillStyle = '#fff';
   ctx.font = '16px sans-serif';
   ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
@@ -73,4 +74,5 @@ function randomPos() {
   };
 }
 
+// Start game loop at 100ms intervals
 setInterval(gameLoop, 100);
