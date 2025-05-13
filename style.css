@@ -1,6 +1,6 @@
 /* style.css */
 
-/* Reset defaults and set up full-screen flex centering */
+/* Reset defaults and set up full-screen flex stacking */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -42,7 +42,7 @@ canvas {
   font-size: 1rem;
 }
 
-/* Optional: make the page unselectable for a cleaner game feel */
+/* Make the page unselectable for a cleaner game feel */
 body, canvas {
   user-select: none;
   -webkit-user-select: none;
