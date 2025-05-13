@@ -1,14 +1,17 @@
 // script.js
 const canvas = document.getElementById('game');
-const ctx    = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
-const tileSize  = 20;
+const tileSize = 20;
 const tileCount = canvas.width / tileSize;
 
 let snake = [{ x: 10, y: 10 }];
-let vel   = { x: 0, y: 0 };
-let food  = randomPos();
+let vel = { x: 0, y: 0 };
+let food = randomPos();
 let score = 0;
+
+// Make the snake invincible for the first 5 seconds
+const invincibleUntil = Date.now() + 5000;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowUp'    && vel.y === 0) vel = { x: 0, y: -1 };
@@ -23,26 +26,27 @@ function gameLoop() {
 }
 
 function update() {
-  // Only start moving after first keypress
+  // Wait for the first keypress before moving
   if (vel.x === 0 && vel.y === 0) {
     return;
   }
 
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
-
-  // Check for wall collisions or self collisions
-  const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
-  const hitSelf = snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y);
-  if (hitWall || hitSelf) {
-    alert(`Game Over! Score: ${score}`);
-    snake = [{ x: 10, y: 10 }];
-    vel   = { x: 0, y: 0 };
-    food  = randomPos();
-    score = 0;
-    return;
-  }
-
   snake.unshift(head);
+
+  // Only check collisions after invincibility period ends
+  if (Date.now() >= invincibleUntil) {
+    const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
+    const hitSelf = snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y);
+    if (hitWall || hitSelf) {
+      alert(`Game Over! Score: ${score}`);
+      snake = [{ x: 10, y: 10 }];
+      vel = { x: 0, y: 0 };
+      food = randomPos();
+      score = 0;
+      return;
+    }
+  }
 
   // Eat food or move forward
   if (head.x === food.x && head.y === food.y) {
@@ -72,5 +76,5 @@ function randomPos() {
   return { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
 }
 
-// Start the game loop (100ms interval)
+// Start the game loop
 setInterval(gameLoop, 100);
