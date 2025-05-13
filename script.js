@@ -1,4 +1,3 @@
-// script.js
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
@@ -25,11 +24,11 @@ function gameLoop() {
 function update() {
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
 
-  // Check collisions
+  // check wall‐hits and self‐hits (ignoring the old head at index 0)
   if (
     head.x < 0 || head.y < 0 ||
     head.x >= tileCount || head.y >= tileCount ||
-    snake.some(s => s.x === head.x && s.y === head.y)
+    snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y)
   ) {
     alert(`Game Over! Score: ${score}`);
     snake = [{ x: 10, y: 10 }];
@@ -41,7 +40,7 @@ function update() {
 
   snake.unshift(head);
 
-  // Eat food
+  // eat food?
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
@@ -51,21 +50,17 @@ function update() {
 }
 
 function draw() {
-  // clear
   ctx.fillStyle = '#222';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // snake
   ctx.fillStyle = 'lime';
-  for (let s of snake) {
+  snake.forEach(s => {
     ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize);
-  }
+  });
 
-  // food
   ctx.fillStyle = 'red';
   ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
 
-  // score
   ctx.fillStyle = '#fff';
   ctx.font = '16px sans-serif';
   ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
@@ -78,5 +73,4 @@ function randomPos() {
   };
 }
 
-// start
 setInterval(gameLoop, 100);
