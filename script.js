@@ -1,16 +1,27 @@
 // script.js
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
 
-const tileSize = 20;
+// --- visitor counter (CountAPI) ---
+fetch('https://api.countapi.xyz/hit/snake-game-example/visitor')
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('visit-count').textContent =
+      `Total visits: ${data.value}`;
+  })
+  .catch(err => console.error('Counter error:', err));
+
+// --- rest of your Snake game code ---
+const canvas = document.getElementById('game');
+const ctx    = canvas.getContext('2d');
+
+const tileSize  = 20;
 const tileCount = canvas.width / tileSize;
 
 let snake = [{ x: 10, y: 10 }];
-let vel = { x: 0, y: 0 };
-let food = randomPos();
+let vel   = { x: 0, y: 0 };
+let food  = randomPos();
 let score = 0;
 
-// Make the snake invincible for the first 5 seconds
+// 5-second invincibility
 const invincibleUntil = Date.now() + 5000;
 
 document.addEventListener('keydown', e => {
@@ -26,29 +37,21 @@ function gameLoop() {
 }
 
 function update() {
-  // Wait for the first keypress before moving
-  if (vel.x === 0 && vel.y === 0) {
-    return;
-  }
+  if (vel.x === 0 && vel.y === 0) return; // don’t move until keypress
 
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
   snake.unshift(head);
 
-  // Only check collisions after invincibility period ends
   if (Date.now() >= invincibleUntil) {
     const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
-    const hitSelf = snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y);
+    const hitSelf = snake.slice(1).some(seg => seg.x === head.x && seg.y === head.y);
     if (hitWall || hitSelf) {
       alert(`Game Over! Score: ${score}`);
-      snake = [{ x: 10, y: 10 }];
-      vel = { x: 0, y: 0 };
-      food = randomPos();
-      score = 0;
+      resetGame();
       return;
     }
   }
 
-  // Eat food or move forward
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
@@ -73,8 +76,17 @@ function draw() {
 }
 
 function randomPos() {
-  return { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
+  return {
+    x: Math.floor(Math.random() * tileCount),
+    y: Math.floor(Math.random() * tileCount)
+  };
 }
 
-// Start the game loop
+function resetGame() {
+  snake = [{ x: 10, y: 10 }];
+  vel   = { x: 0, y: 0 };
+  food  = randomPos();
+  score = 0;
+}
+
 setInterval(gameLoop, 100);
