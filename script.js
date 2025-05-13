@@ -1,15 +1,21 @@
 // script.js
 
-// --- visitor counter (CountAPI) ---
-fetch('https://api.countapi.xyz/hit/snake-game-example/visitor')
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('visit-count').textContent =
-      `Total visits: ${data.value}`;
+// 1) Global visitor counter via Abacus
+const visitEl = document.getElementById('visit-count');
+fetch('https://abacus.jasoncameron.dev/hit/shankapotamus88/visitor')
+  .then(r => {
+    if (!r.ok) throw new Error(r.statusText);
+    return r.json();
   })
-  .catch(err => console.error('Counter error:', err));
+  .then(data => {
+    visitEl.textContent = `Total visits: ${data.value}`;
+  })
+  .catch(err => {
+    console.error('Abacus error:', err);
+    visitEl.textContent = 'Visits unavailable';
+  });
 
-// --- rest of your Snake game code ---
+// 2) Snake game code
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
@@ -21,7 +27,7 @@ let vel   = { x: 0, y: 0 };
 let food  = randomPos();
 let score = 0;
 
-// 5-second invincibility
+// 5-second invincibility on load
 const invincibleUntil = Date.now() + 5000;
 
 document.addEventListener('keydown', e => {
@@ -37,11 +43,13 @@ function gameLoop() {
 }
 
 function update() {
-  if (vel.x === 0 && vel.y === 0) return; // don’t move until keypress
+  // don’t move until first keypress
+  if (vel.x === 0 && vel.y === 0) return;
 
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
   snake.unshift(head);
 
+  // check collisions after invincibility expires
   if (Date.now() >= invincibleUntil) {
     const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
     const hitSelf = snake.slice(1).some(seg => seg.x === head.x && seg.y === head.y);
@@ -52,6 +60,7 @@ function update() {
     }
   }
 
+  // eat food or move on
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
