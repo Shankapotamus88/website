@@ -23,9 +23,14 @@ function gameLoop() {
 }
 
 function update() {
+  // Only start moving after first keypress
+  if (vel.x === 0 && vel.y === 0) {
+    return;
+  }
+
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
 
-  // Check for wall collisions or self collisions (ignoring the current head at index 0)
+  // Check for wall collisions or self collisions
   const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
   const hitSelf = snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y);
   if (hitWall || hitSelf) {
@@ -39,7 +44,7 @@ function update() {
 
   snake.unshift(head);
 
-  // Eat food
+  // Eat food or move forward
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
@@ -49,30 +54,23 @@ function update() {
 }
 
 function draw() {
-  // Clear canvas
   ctx.fillStyle = '#222';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw snake
   ctx.fillStyle = 'lime';
   snake.forEach(s => ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize));
 
-  // Draw food
   ctx.fillStyle = 'red';
   ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
 
-  // Draw score
   ctx.fillStyle = '#fff';
   ctx.font = '16px sans-serif';
   ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
 }
 
 function randomPos() {
-  return {
-    x: Math.floor(Math.random() * tileCount),
-    y: Math.floor(Math.random() * tileCount)
-  };
+  return { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
 }
 
-// Start game loop at 100ms intervals
+// Start the game loop (100ms interval)
 setInterval(gameLoop, 100);
