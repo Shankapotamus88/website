@@ -1,22 +1,36 @@
+/* style.css */
+
+/* Reset defaults and set up full-screen flex centering */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
 body {
-    background-image: url('images/Glass of Water.png'); /* Path to image */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: white;
-    font-family: 'Arial', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #111;
+  font-family: sans-serif;
+  color: #fff;
 }
 
-h1 {
-    text-align: center;
-    color: #fff;
+/* Canvas styling */
+canvas {
+  background-color: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
 }
 
-p {
-    text-align: center;
-    color: #fff;
-    font-size: 2rem;
-    font-weight: bold;
+/* Optional: make the page unselectable for a cleaner game feel */
+body, canvas {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
-
