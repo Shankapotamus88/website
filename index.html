@@ -1,39 +1,28 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Weather Page</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Simple Snake Game</title>
   <style>
-    .weather-container {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: 20rem;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 1rem;
-      border-radius: 0.625rem;
-      text-align: center;
-      font-family: Arial, sans-serif;
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+      font-family: sans-serif;
     }
-    .hidden {
-      display: none;
+    canvas {
+      background: #222;
+      border: 2px solid #fff;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to My Website</h1>
-  <p>I am just learning.</p>
-
-  <!-- Weather Widget Container -->
-  <div id="weather-container" class="weather-container hidden">
-    <h2>Current Weather</h2>
-    <p id="weather-info">Loading weather data...</p>
-  </div>
-
-  <!-- Link to your external JavaScript file -->
+  <canvas id="game" width="400" height="400"></canvas>
   <script src="script.js"></script>
 </body>
 </html>
