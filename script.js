@@ -1,21 +1,4 @@
-// script.js
-
-// 1) Global visitor counter via Abacus
-const visitEl = document.getElementById('visit-count');
-fetch('https://abacus.jasoncameron.dev/hit/shankapotamus88/visitor')
-  .then(r => {
-    if (!r.ok) throw new Error(r.statusText);
-    return r.json();
-  })
-  .then(data => {
-    visitEl.textContent = `Total visits: ${data.value}`;
-  })
-  .catch(err => {
-    console.error('Abacus error:', err);
-    visitEl.textContent = 'Visits unavailable';
-  });
-
-// 2) Snake game code
+// Snake game code
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
