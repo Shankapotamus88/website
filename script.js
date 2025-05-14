@@ -1,14 +1,14 @@
-//  Snake game code
+// Snake game code
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx       = canvas.getContext('2d');
   const tileSize  = 20;
   const tileCount = canvas.width / tileSize;
 
-  // state
+  // game state
   let snake = [{ x: 10, y: 10 }];
   let vel   = { x: 0, y: 0 };
-  let foods = [randomPos()];    // <-- now an array
+  let foods = [randomPos()];    // array of food items
   let score = 0;
 
   // 5-second invincibility on walls/self
@@ -30,11 +30,11 @@ if (canvas) {
     // don’t move until first keypress
     if (vel.x === 0 && vel.y === 0) return;
 
-    // move snake
+    // advance head
     const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
     snake.unshift(head);
 
-    // wall / self collision (after invincible)
+    // wall/self collision (after invincible)
     if (Date.now() >= invincibleUntil) {
       const hitWall = head.x < 0 || head.y < 0
                    || head.x >= tileCount || head.y >= tileCount;
@@ -47,7 +47,7 @@ if (canvas) {
       }
     }
 
-    // spawn fresh food whenever one goes rotten
+    // spawn a fresh red food whenever an existing food just goes rotten
     foods.forEach(f => {
       const age = Date.now() - f.spawnTime;
       if (age > 5000 && !f.spawnedNew) {
@@ -55,6 +55,9 @@ if (canvas) {
         f.spawnedNew = true;
       }
     });
+
+    // track whether we ate fresh food this frame
+    let ateFresh = false;
 
     // check for eating any food
     for (let i = 0; i < foods.length; i++) {
@@ -67,42 +70,41 @@ if (canvas) {
           resetGame();
           return;
         } else {
-          // ate fresh → score & replace just that one
+          // ate fresh → increment score, replace that piece
           score++;
           foods.splice(i, 1);
           foods.push(randomPos());
-          break;
+          ateFresh = true;
         }
+        break;
       }
     }
 
-    // normal move: if we didn't eat fresh, pop tail
-    // (the for–loop above only calls splice/break on fresh)
-    if (!(head.x === foods[foods.length-1]?.x 
-          && head.y === foods[foods.length-1]?.y)) {
+    // only remove tail if we DIDN’T eat fresh food
+    if (!ateFresh) {
       snake.pop();
     }
   }
 
   function draw() {
-    // clear
+    // clear background
     ctx.fillStyle = '#222';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // snake
+    // draw snake
     ctx.fillStyle = 'lime';
     snake.forEach(s =>
       ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize)
     );
 
-    // foods
+    // draw all foods
     foods.forEach(f => {
       const age = Date.now() - f.spawnTime;
       ctx.fillStyle = age > 5000 ? 'white' : 'red';
       ctx.fillRect(f.x * tileSize, f.y * tileSize, tileSize, tileSize);
     });
 
-    // score
+    // draw score
     ctx.fillStyle = '#fff';
     ctx.font      = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
