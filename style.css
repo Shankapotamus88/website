@@ -2,61 +2,67 @@
 
 /* Reset defaults and set up full-screen flex stacking */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  html, body {
-    height: 100vh;
-  }
-  
-  body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: #111;
-    font-family: sans-serif;
-    color: #fff;
-  }
-  
-  /* Title styling */
-  h1 {
-    color: lime;
-    margin-bottom: 20px;
-    font-size: 2rem;
-  }
-  
-  /* Canvas styling */
-  canvas {
-    background-color: #222;
-    border: 2px solid #fff;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-  }
-  
-  /* Visitor counter styling */
-  #visit-count {
-    color: lime;
-    margin-top: 12px;
-    font-size: 1rem;
-  }
-  
-  /* Make the page unselectable for a cleaner game feel */
-  body, canvas {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-  nav {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure html and body span the full viewport height */
+html, body {
+  height: 100vh;
+}
+
+/* Body layout */
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #111;
+  font-family: sans-serif;
+  color: #fff;
+}
+
+/* Navigation bar */
+nav {
   margin-bottom: 16px;
 }
 nav a {
   color: lime;
   text-decoration: none;
   font-weight: bold;
+  margin: 0 8px;
 }
 nav a:hover {
   text-decoration: underline;
+}
+
+/* Title styling */
+h1 {
+  color: lime;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+/* Canvas styling */
+canvas {
+  background-color: #222;
+  border: 2px solid #fff;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+/* Visitor counter styling */
+#visit-count {
+  color: lime;
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+/* Make the page unselectable for a cleaner game feel */
+body,
+canvas {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
