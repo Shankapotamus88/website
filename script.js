@@ -15,12 +15,7 @@ fetch('https://abacus.jasoncameron.dev/hit/shankapotamus88/visitor')
     visitEl.textContent = 'Visits unavailable';
   });
 
-// 2) High score (localStorage)
-const highScoreEl = document.getElementById('high-score');
-let highScore = parseInt(localStorage.getItem('snakeHighScore') || '0', 10);
-highScoreEl.textContent = `High Score: ${highScore}`;
-
-// 3) Snake game code
+// 2) Snake game code
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
@@ -48,30 +43,24 @@ function gameLoop() {
 }
 
 function update() {
-  // Don't move until first keypress
+  // don’t move until first keypress
   if (vel.x === 0 && vel.y === 0) return;
 
   const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
   snake.unshift(head);
 
-  // Check collisions after invincibility expires
+  // check collisions after invincibility expires
   if (Date.now() >= invincibleUntil) {
     const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
     const hitSelf = snake.slice(1).some(seg => seg.x === head.x && seg.y === head.y);
     if (hitWall || hitSelf) {
-      // Update high score if beaten
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('snakeHighScore', highScore);
-        highScoreEl.textContent = `High Score: ${highScore}`;
-      }
       alert(`Game Over! Score: ${score}`);
       resetGame();
       return;
     }
   }
 
-  // Eat food or move on
+  // eat food or move on
   if (head.x === food.x && head.y === food.y) {
     score++;
     food = randomPos();
@@ -85,9 +74,7 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = 'lime';
-  snake.forEach(s => 
-    ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize)
-  );
+  snake.forEach(s => ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize));
 
   ctx.fillStyle = 'red';
   ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
