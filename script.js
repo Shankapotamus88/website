@@ -5,7 +5,14 @@ if (canvas) {
   const bgMusic      = document.getElementById('bg-music');
   let musicStarted   = false;
 
-  // —— canvas & game setup ——
+  // —— high score setup ——  
+  const highScoreEl = document.getElementById('high-score');
+  let highScore = parseInt(localStorage.getItem('snake-highscore') || '0', 10);
+  if (highScoreEl) {
+    highScoreEl.textContent = `High Score: ${highScore}`;
+  }
+
+  // —— canvas & game setup ——  
   const ctx       = canvas.getContext('2d');
   const tileSize  = 20;
   const tileCount = canvas.width / tileSize;
@@ -21,7 +28,7 @@ if (canvas) {
     // ** start music on first move **
     if (!musicStarted && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
       if (bgMusic) {
-        bgMusic.volume = 0.5;  // adjust volume 0.0–1.0
+        bgMusic.volume = 0.5;
         bgMusic.play();
       }
       musicStarted = true;
@@ -40,12 +47,13 @@ if (canvas) {
   }
 
   function update() {
-    if (vel.x === 0 && vel.y === 0) return;
+    if (vel.x === 0 && vel.y === 0) return;  // wait for first move
 
+    // advance head
     const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
     snake.unshift(head);
 
-    // collisions after invincible window
+    // collision (after invincibility)
     if (Date.now() >= invincibleUntil) {
       const hitWall = head.x < 0 || head.y < 0
                    || head.x >= tileCount || head.y >= tileCount;
@@ -58,7 +66,7 @@ if (canvas) {
       }
     }
 
-    // spawn a new red piece when any food item rots
+    // spawn new fresh food when any item rots
     foods.forEach(f => {
       if (!f.spawnedNew && (Date.now() - f.spawnTime) > 5000) {
         foods.push(randomPos());
@@ -74,13 +82,20 @@ if (canvas) {
       if (head.x === f.x && head.y === f.y) {
         const age = Date.now() - f.spawnTime;
         if (age > 5000) {
-          // rotten → game over
           alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
           resetGame();
           return;
         } else {
-          // fresh → grow & respawn that piece
+          // fresh → grow & respawn
           score++;
+          // update high score if needed
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snake-highscore', highScore);
+            if (highScoreEl) {
+              highScoreEl.textContent = `High Score: ${highScore}`;
+            }
+          }
           foods.splice(i, 1);
           foods.push(randomPos());
           ateFresh = true;
@@ -89,8 +104,10 @@ if (canvas) {
       }
     }
 
-    // only shrink tail if we didn't eat fresh
-    if (!ateFresh) snake.pop();
+    // only remove tail if we didn't eat fresh
+    if (!ateFresh) {
+      snake.pop();
+    }
   }
 
   function draw() {
@@ -98,20 +115,20 @@ if (canvas) {
     ctx.fillStyle = '#222';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // snake
+    // draw snake
     ctx.fillStyle = 'lime';
     snake.forEach(s =>
       ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize)
     );
 
-    // foods
+    // draw foods
     foods.forEach(f => {
       const age = Date.now() - f.spawnTime;
       ctx.fillStyle = age > 5000 ? 'white' : 'red';
       ctx.fillRect(f.x * tileSize, f.y * tileSize, tileSize, tileSize);
     });
 
-    // score
+    // draw score
     ctx.fillStyle = '#fff';
     ctx.font      = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
@@ -127,16 +144,20 @@ if (canvas) {
   }
 
   function resetGame() {
-    snake         = [{ x: 10, y: 10 }];
-    vel           = { x: 0, y: 0 };
-    foods         = [randomPos()];
-    score         = 0;
-    musicStarted  = false;
+    // reset game state
+    snake = [{ x: 10, y: 10 }];
+    vel   = { x: 0, y: 0 };
+    foods = [randomPos()];
+    score = 0;
+
     // reset music
+    musicStarted = false;
     if (bgMusic) {
       bgMusic.pause();
       bgMusic.currentTime = 0;
     }
+
+    // note: high score remains
   }
 
   setInterval(gameLoop, 100);
