@@ -35,21 +35,14 @@ canvas {
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
 }
 
-/* High score styling */
-#high-score {
+/* Visitor counter styling */
+#visit-count {
   color: lime;
   margin-top: 12px;
   font-size: 1rem;
 }
 
-/* Visitor counter styling */
-#visit-count {
-  color: lime;
-  margin-top: 6px;
-  font-size: 1rem;
-}
-
-/* Optional: make the page unselectable for a cleaner game feel */
+/* Make the page unselectable for a cleaner game feel */
 body, canvas {
   user-select: none;
   -webkit-user-select: none;
