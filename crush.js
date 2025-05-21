@@ -17,7 +17,6 @@ if (canvas) {
   let blocks = [];
   let blockTimer = 0;
   let blockSpeed = 1;
-  const blockGap = playerWidth * 2;
 
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') leftPressed = true;
@@ -41,20 +40,15 @@ if (canvas) {
     if (rightPressed) playerX += playerSpeed;
     playerX = Math.max(0, Math.min(canvas.width - playerWidth, playerX));
 
-    // Add new blocks
-    blockTimer++;
-    if (blockTimer > 60) {
-      blockTimer = 0;
-      const gapX = Math.floor(Math.random() * (canvas.width - blockGap));
-      if (gapX > 0) {
-        blocks.push({ x: 0, y: -20, w: gapX, h: randomHeight() });
-      }
-      if (gapX + blockGap < canvas.width) {
-        blocks.push({ x: gapX + blockGap, y: -20, w: canvas.width - (gapX + blockGap), h: randomHeight() });
-      }
+    // Add new block if none are on screen
+    if (blocks.length === 0) {
+      const maxWidth = canvas.width * 0.75;
+      const blockWidth = 50 + Math.random() * (maxWidth - 50);
+      const blockX = Math.random() * (canvas.width - blockWidth);
+      blocks.push({ x: blockX, y: -300, w: blockWidth, h: 300 });
     }
 
-    // Move blocks
+    // Move block
     for (let b of blocks) {
       b.y += blockSpeed;
     }
@@ -99,10 +93,6 @@ if (canvas) {
     ctx.fillStyle = '#fff';
     ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
-  }
-
-  function randomHeight() {
-    return 20 + Math.random() * 30;
   }
 
   function resetGame() {
