@@ -6,7 +6,7 @@ if (canvas) {
   // Game setup
   const playerWidth = 20;
   const playerHeight = 20;
-  const playerY = canvas.height - playerHeight;
+  const playerY = canvas.height - playerHeight - 10;
   const playerSpeed = 5;
 
   let playerX = canvas.width / 2 - playerWidth / 2;
@@ -19,8 +19,14 @@ if (canvas) {
   let blockSpeed = 1;
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') leftPressed = true;
-    if (e.key === 'ArrowRight') rightPressed = true;
+    if (e.key === 'ArrowLeft') {
+      leftPressed = true;
+      rightPressed = false;
+    }
+    if (e.key === 'ArrowRight') {
+      rightPressed = true;
+      leftPressed = false;
+    }
   });
 
   document.addEventListener('keyup', e => {
@@ -42,9 +48,15 @@ if (canvas) {
 
     // Add new block if none are on screen
     if (blocks.length === 0) {
-      const maxWidth = canvas.width * 0.5;
+      const maxWidth = canvas.width * 0.75;
       const blockWidth = 50 + Math.random() * (maxWidth - 50);
-      const blockX = Math.random() * (canvas.width - blockWidth);
+      const playerCenter = playerX + playerWidth / 2;
+
+      let blockX;
+      do {
+        blockX = Math.random() * (canvas.width - blockWidth);
+      } while (blockX < playerCenter + 60 && blockX + blockWidth > playerCenter - 60);
+
       blocks.push({ x: blockX, y: -300, w: blockWidth, h: 300 });
     }
 
@@ -97,6 +109,8 @@ if (canvas) {
 
   function resetGame() {
     playerX = canvas.width / 2 - playerWidth / 2;
+    leftPressed = false;
+    rightPressed = false;
     blocks = [];
     score = 0;
     blockSpeed = 1;
