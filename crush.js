@@ -53,9 +53,21 @@ if (canvas) {
       const playerCenter = playerX + playerWidth / 2;
 
       let blockX;
+      let attempts = 0;
+      const maxAttempts = 10;
+
       do {
         blockX = Math.random() * (canvas.width - blockWidth);
-      } while (blockX < playerCenter + 60 && blockX + blockWidth > playerCenter - 60);
+        attempts++;
+      } while (
+        blockX < playerCenter + 60 &&
+        blockX + blockWidth > playerCenter - 60 &&
+        attempts < maxAttempts
+      );
+
+      if (attempts >= maxAttempts) {
+        blockX = Math.random() * (canvas.width - blockWidth);
+      }
 
       blocks.push({ x: blockX, y: -300, w: blockWidth, h: 300 });
     }
