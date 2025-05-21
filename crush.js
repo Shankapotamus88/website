@@ -77,8 +77,8 @@ if (canvas) {
       b.y += blockSpeed;
     }
 
-    // Remove off-screen blocks
-    blocks = blocks.filter(b => b.y < canvas.height);
+    // Remove off-screen blocks (when fully off screen)
+    blocks = blocks.filter(b => b.y < canvas.height + b.h);
 
     // Collision detection
     for (let b of blocks) {
