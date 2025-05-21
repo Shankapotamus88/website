@@ -2,6 +2,9 @@
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
+  // —— background music setup ——
+  const bgMusic = document.getElementById('bg-music');
+  let musicStarted = false;
 
   // Game setup
   const playerWidth = 20;
@@ -18,6 +21,14 @@ if (canvas) {
   let blockSpeed = 1;
 
   document.addEventListener('keydown', e => {
+    // start music on first player input
+    if (!musicStarted && ['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (bgMusic) {
+        bgMusic.volume = 0.5;
+        bgMusic.play().catch(err => console.warn('Music play failed:', err));
+      }
+      musicStarted = true;
+    }
     if (e.key === 'ArrowLeft') {
       leftPressed = true;
       rightPressed = false;
@@ -107,6 +118,12 @@ if (canvas) {
     blocks = [];
     score = 0;
     blockSpeed = 1;
+    // reset music
+    musicStarted = false;
+    if (bgMusic) {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
   }
 
   gameLoop();
