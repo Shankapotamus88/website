@@ -25,6 +25,7 @@ if (canvas) {
 
   let blocks = [];
   let blockSpeed = 1;
+  let gamePaused = false;
 
   document.addEventListener('keydown', e => {
     // start music on first player input
@@ -51,7 +52,7 @@ if (canvas) {
   });
 
   function gameLoop() {
-    update();
+    if (!gamePaused) update();
     draw();
     requestAnimationFrame(gameLoop);
   }
@@ -86,8 +87,13 @@ if (canvas) {
         playerY < b.y + b.h &&
         playerY + playerHeight > b.y
       ) {
-        alert(`Game Over! Score: ${score}`);
-        resetGame();
+        // Pause game and wait for player confirmation
+        gamePaused = true;
+        const restart = confirm(`Game Over! Score: ${score}\nPress OK to start next round.`);
+        if (restart) {
+          resetGame();
+        }
+        gamePaused = false;
         return;
       }
     }
