@@ -1,4 +1,4 @@
-// Dodge game code
+// Crush game code
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -9,7 +9,7 @@ if (canvas) {
 
   // —— high score setup ——
   const highScoreEl = document.getElementById('high-score');
-  let highScore = parseInt(localStorage.getItem('dodge-highscore') || '0', 10);
+  let highScore = parseInt(localStorage.getItem('crush-highscore') || '0', 10);
   if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
 
   // Game setup
@@ -92,12 +92,11 @@ if (canvas) {
       }
     }
 
-    // Increase difficulty
+    // Increase difficulty and score
     score++;
-    // Update high score
     if (score > highScore) {
       highScore = score;
-      localStorage.setItem('dodge-highscore', highScore);
+      localStorage.setItem('crush-highscore', highScore);
       if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
     }
     if (score % 300 === 0) blockSpeed += 0.5;
@@ -124,7 +123,7 @@ if (canvas) {
   }
 
   function resetGame() {
-    // Reset positions and speed
+    // Reset state
     playerX = canvas.width / 2 - playerWidth / 2;
     leftPressed = false;
     rightPressed = false;
@@ -137,6 +136,8 @@ if (canvas) {
       bgMusic.pause();
       bgMusic.currentTime = 0;
     }
+    // update displayed high score in case changed during play
+    if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
 
   gameLoop();
