@@ -6,7 +6,7 @@ if (canvas) {
   // Game setup
   const playerWidth = 20;
   const playerHeight = 20;
-  const playerY = canvas.height - playerHeight - 10;
+  const playerY = canvas.height - playerHeight;
   const playerSpeed = 5;
 
   let playerX = canvas.width / 2 - playerWidth / 2;
@@ -42,7 +42,7 @@ if (canvas) {
 
     // Add new block if none are on screen
     if (blocks.length === 0) {
-      const maxWidth = canvas.width * 0.75;
+      const maxWidth = canvas.width * 0.5;
       const blockWidth = 50 + Math.random() * (maxWidth - 50);
       const blockX = Math.random() * (canvas.width - blockWidth);
       blocks.push({ x: blockX, y: -300, w: blockWidth, h: 300 });
