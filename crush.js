@@ -15,7 +15,6 @@ if (canvas) {
   let score = 0;
 
   let blocks = [];
-  let blockTimer = 0;
   let blockSpeed = 1;
 
   document.addEventListener('keydown', e => {
@@ -46,39 +45,21 @@ if (canvas) {
     if (rightPressed) playerX += playerSpeed;
     playerX = Math.max(0, Math.min(canvas.width - playerWidth, playerX));
 
-    // Add new block if none are on screen
+    // Spawn new block if none exist
     if (blocks.length === 0) {
       const maxWidth = canvas.width * 0.75;
       const blockWidth = 50 + Math.random() * (maxWidth - 50);
-      const playerCenter = playerX + playerWidth / 2;
-
-      let blockX;
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      do {
-        blockX = Math.random() * (canvas.width - blockWidth);
-        attempts++;
-      } while (
-        blockX < playerCenter + 60 &&
-        blockX + blockWidth > playerCenter - 60 &&
-        attempts < maxAttempts
-      );
-
-      if (attempts >= maxAttempts) {
-        blockX = Math.random() * (canvas.width - blockWidth);
-      }
-
+      const blockX = Math.random() * (canvas.width - blockWidth);
       blocks.push({ x: blockX, y: -300, w: blockWidth, h: 300 });
     }
 
-    // Move block
+    // Move blocks down
     for (let b of blocks) {
       b.y += blockSpeed;
     }
 
-    // Remove off-screen blocks (when fully off screen)
-    blocks = blocks.filter(b => b.y < canvas.height + b.h);
+    // Remove blocks once fully off screen
+    blocks = blocks.filter(b => b.y < canvas.height);
 
     // Collision detection
     for (let b of blocks) {
