@@ -4,7 +4,7 @@ if (canvas) {
   const ctx = canvas.getContext('2d');
 
   // Game setup
-  const playerWidth = 40;
+  const playerWidth = 20;
   const playerHeight = 20;
   const playerY = canvas.height - playerHeight - 10;
   const playerSpeed = 5;
