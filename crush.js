@@ -1,4 +1,4 @@
-// Dodge game code: single purple block, player reset, arrow or a/l movement
+// Dodge game code: single purple block, player reset, arrow/a/l/touch controls
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -25,26 +25,50 @@ if (canvas) {
   const spawnDelay = 500; // ms between blocks
   let lastSpawnTime = Date.now() - spawnDelay;
 
+  function startMusic() {
+    if (!musicStarted && bgMusic) {
+      bgMusic.volume = 0.5;
+      bgMusic.play().catch(() => {});
+      musicStarted = true;
+    }
+  }
+
+  function movePlayer(direction) {
+    const centerX = canvas.width / 2 - playerWidth / 2;
+    if (direction === 'left') {
+      playerX = centerX / 2;
+    } else {
+      const rightX = canvas.width - playerWidth;
+      playerX = centerX + (rightX - centerX) / 2;
+    }
+  }
+
+  // Keyboard and A/L controls
   document.addEventListener('keydown', e => {
-    const key = e.key.toLowerCase(); // normalize to lowercase
+    const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
-      // start music on first move
-      if (!musicStarted && bgMusic) {
-        bgMusic.volume = 0.5;
-        bgMusic.play().catch(() => {});
-        musicStarted = true;
-      }
-      const centerX = canvas.width / 2 - playerWidth / 2;
+      startMusic();
       if (key === 'arrowleft' || key === 'a') {
-        // move halfway from center to left
-        playerX = centerX / 2;
+        movePlayer('left');
       } else {
-        // move halfway from center to right
-        const rightX = canvas.width - playerWidth;
-        playerX = centerX + (rightX - centerX) / 2;
+        movePlayer('right');
       }
     }
   });
+
+  // Touch controls: tap left or right half of canvas
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    startMusic();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    if (x < canvas.width / 2) {
+      movePlayer('left');
+    } else {
+      movePlayer('right');
+    }
+  }, false);
 
   function gameLoop() {
     update();
