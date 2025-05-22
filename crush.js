@@ -1,4 +1,4 @@
-// Dodge game code: single block & 0.5s delay
+// Dodge game code: single block & 0.5s delay with player reset
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -67,6 +67,11 @@ if (canvas) {
       const x = side === 0 ? 0 : w;
       block = { x, y: -h, w, h };
       lastSpawnTime = Date.now();
+
+      // Reset player to center for new block
+      playerX = canvas.width / 2 - playerWidth / 2;
+      leftPressed = false;
+      rightPressed = false;
     }
 
     // Move block
