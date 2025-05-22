@@ -1,4 +1,4 @@
-// Dodge game code: blocks with random colors
+// Dodge game code: blocks with random colors & flashing background
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -77,7 +77,7 @@ if (canvas) {
     // move block
     if (block) {
       block.y += blockSpeed;
-      // collision
+      // collision detection
       if (
         playerX < block.x + block.w &&
         playerX + playerWidth > block.x &&
@@ -87,7 +87,7 @@ if (canvas) {
         endGame();
         return;
       }
-      // off-screen
+      // remove after off-screen
       if (block.y >= canvas.height) block = null;
     }
 
@@ -102,10 +102,12 @@ if (canvas) {
   }
 
   function draw() {
-    ctx.fillStyle = '#111';
+    // flashing background
+    const flash = Math.floor(Date.now() / 200) % 2 === 0;
+    ctx.fillStyle = flash ? '#fff' : '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // draw player
+    // draw player (lime remains visible)
     ctx.fillStyle = 'lime';
     ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
 
@@ -115,8 +117,8 @@ if (canvas) {
       ctx.fillRect(block.x, block.y, block.w, block.h);
     }
 
-    // draw score
-    ctx.fillStyle = '#fff';
+    // draw score with inverted text color
+    ctx.fillStyle = flash ? '#000' : '#fff';
     ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
