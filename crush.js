@@ -1,19 +1,7 @@
-// Dodge game code: responsive canvas scaling only on touch, with controls
+// Dodge game code: single purple block, player reset, arrow/a/l, pointer/touch controls
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
-
-  // —— responsive scaling ——
-  let scaled = false;
-  function scaleCanvas() {
-    if (scaled) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    // Update player baseline and position
-    playerY = canvas.height - playerHeight;
-    playerX = canvas.width / 2 - playerWidth / 2;
-    scaled = true;
-  }
 
   // —— background music setup ——
   const bgMusic = document.getElementById('bg-music');
@@ -27,14 +15,14 @@ if (canvas) {
   // Player setup
   const playerWidth = 20;
   const playerHeight = 20;
-  let playerY = canvas.height - playerHeight;
+  const playerY = canvas.height - playerHeight;
   let playerX = canvas.width / 2 - playerWidth / 2;
 
   // Game variables
   let score = 0;
   let block = null;
   let blockSpeed = 1;
-  const spawnDelay = 500; // ms
+  const spawnDelay = 500; // ms between blocks
   let lastSpawnTime = Date.now() - spawnDelay;
 
   function startMusic() {
@@ -55,7 +43,7 @@ if (canvas) {
     }
   }
 
-  // Keyboard controls (no scaling)
+  // Keyboard controls (A/L or Arrow)
   document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
@@ -64,10 +52,9 @@ if (canvas) {
     }
   });
 
-  // Pointer controls (mouse or touch) – scales canvas first
+  // Pointer controls (mouse or touch)
   canvas.addEventListener('pointerdown', e => {
     e.preventDefault();
-    scaleCanvas();
     startMusic();
     const x = e.offsetX;
     movePlayer(x < canvas.width / 2 ? 'left' : 'right');
@@ -76,7 +63,6 @@ if (canvas) {
   // Touch fallback
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    scaleCanvas();
     startMusic();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
