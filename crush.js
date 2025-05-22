@@ -1,4 +1,4 @@
-// Dodge game code: blocks with random colors & flashing background
+// Dodge game code: single block, player reset, random block colors
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -102,12 +102,11 @@ if (canvas) {
   }
 
   function draw() {
-    // flashing background
-    const flash = Math.floor(Date.now() / 200) % 2 === 0;
-    ctx.fillStyle = flash ? '#fff' : '#000';
+    // normal background
+    ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // draw player (lime remains visible)
+    // draw player
     ctx.fillStyle = 'lime';
     ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
 
@@ -117,8 +116,8 @@ if (canvas) {
       ctx.fillRect(block.x, block.y, block.w, block.h);
     }
 
-    // draw score with inverted text color
-    ctx.fillStyle = flash ? '#000' : '#fff';
+    // draw score
+    ctx.fillStyle = '#fff';
     ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
