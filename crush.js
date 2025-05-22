@@ -1,4 +1,4 @@
-// Dodge game code: responsive canvas scaling & controls
+// Dodge game code: responsive canvas scaling only on touch, with controls
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -7,12 +7,10 @@ if (canvas) {
   let scaled = false;
   function scaleCanvas() {
     if (scaled) return;
-    // fill available screen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // update player position baseline
+    // Update player baseline and position
     playerY = canvas.height - playerHeight;
-    // center player
     playerX = canvas.width / 2 - playerWidth / 2;
     scaled = true;
   }
@@ -36,7 +34,7 @@ if (canvas) {
   let score = 0;
   let block = null;
   let blockSpeed = 1;
-  const spawnDelay = 500; // ms between blocks
+  const spawnDelay = 500; // ms
   let lastSpawnTime = Date.now() - spawnDelay;
 
   function startMusic() {
@@ -57,17 +55,16 @@ if (canvas) {
     }
   }
 
-  // Keyboard controls
+  // Keyboard controls (no scaling)
   document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
-      scaleCanvas();
       startMusic();
       movePlayer((key === 'arrowleft' || key === 'a') ? 'left' : 'right');
     }
   });
 
-  // Pointer controls (mouse or touch)
+  // Pointer controls (mouse or touch) – scales canvas first
   canvas.addEventListener('pointerdown', e => {
     e.preventDefault();
     scaleCanvas();
@@ -94,7 +91,6 @@ if (canvas) {
   }
 
   function update() {
-    // spawn block
     if (!block && Date.now() - lastSpawnTime >= spawnDelay) {
       const side = Math.random() < 0.5 ? 0 : 1;
       const w = canvas.width / 2;
@@ -102,7 +98,8 @@ if (canvas) {
       const x = side === 0 ? 0 : w;
       block = { x, y: -h, w, h, color: 'purple' };
       lastSpawnTime = Date.now();
-      playerX = canvas.width / 2 - playerWidth / 2; // reset
+      // reset player
+      playerX = canvas.width / 2 - playerWidth / 2;
       musicStarted = false;
     }
     if (block) {
@@ -127,13 +124,10 @@ if (canvas) {
   }
 
   function draw() {
-    ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'lime';
-    ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
+    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
     if (block) { ctx.fillStyle = block.color; ctx.fillRect(block.x, block.y, block.w, block.h); }
-    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
-    ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
   function endGame() {
