@@ -1,4 +1,4 @@
-// Dodge game code: single block & 0.5s delay with player reset
+// Dodge game code: teleport half-way horizontal movement
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -12,39 +12,37 @@ if (canvas) {
   let highScore = parseInt(localStorage.getItem('crush-highscore') || '0', 10);
   if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
 
-  // Game setup
+  // Player setup
   const playerWidth = 20;
   const playerHeight = 20;
-  const playerSpeed = 5;
   const playerY = canvas.height - playerHeight;
-
   let playerX = canvas.width / 2 - playerWidth / 2;
-  let leftPressed = false;
-  let rightPressed = false;
-  let score = 0;
 
+  // Game variables
+  let score = 0;
   let block = null;
   let blockSpeed = 1;
-
-  const spawnDelay = 500; // milliseconds
+  const spawnDelay = 500; // ms between blocks
   let lastSpawnTime = Date.now() - spawnDelay;
 
   document.addEventListener('keydown', e => {
-    // start music on first horizontal input
-    if (!musicStarted && ['ArrowLeft','ArrowRight'].includes(e.key)) {
-      if (bgMusic) {
+    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      // start music on first move
+      if (!musicStarted && bgMusic) {
         bgMusic.volume = 0.5;
-        bgMusic.play().catch(err => console.warn('Music play failed:', err));
+        bgMusic.play().catch(() => {});
+        musicStarted = true;
       }
-      musicStarted = true;
+      const centerX = canvas.width / 2 - playerWidth / 2;
+      if (e.key === 'ArrowLeft') {
+        // move halfway from center to left
+        playerX = centerX / 2;
+      } else {
+        // move halfway from center to right
+        const rightX = canvas.width - playerWidth;
+        playerX = centerX + (rightX - centerX) / 2;
+      }
     }
-    if (e.key === 'ArrowLeft') leftPressed = true;
-    if (e.key === 'ArrowRight') rightPressed = true;
-  });
-
-  document.addEventListener('keyup', e => {
-    if (e.key === 'ArrowLeft') leftPressed = false;
-    if (e.key === 'ArrowRight') rightPressed = false;
   });
 
   function gameLoop() {
@@ -54,12 +52,7 @@ if (canvas) {
   }
 
   function update() {
-    // Move player
-    if (leftPressed) playerX -= playerSpeed;
-    if (rightPressed) playerX += playerSpeed;
-    playerX = Math.max(0, Math.min(canvas.width - playerWidth, playerX));
-
-    // Spawn single block after delay
+    // spawn block if none and delay passed
     if (!block && Date.now() - lastSpawnTime >= spawnDelay) {
       const side = Math.random() < 0.5 ? 0 : 1;
       const w = canvas.width / 2;
@@ -68,16 +61,15 @@ if (canvas) {
       block = { x, y: -h, w, h };
       lastSpawnTime = Date.now();
 
-      // Reset player to center for new block
+      // reset player to center
       playerX = canvas.width / 2 - playerWidth / 2;
-      leftPressed = false;
-      rightPressed = false;
+      musicStarted = false;
     }
 
-    // Move block
+    // move block
     if (block) {
       block.y += blockSpeed;
-      // Collision detection
+      // collision
       if (
         playerX < block.x + block.w &&
         playerX + playerWidth > block.x &&
@@ -87,13 +79,11 @@ if (canvas) {
         endGame();
         return;
       }
-      // Remove after off-screen
-      if (block.y >= canvas.height) {
-        block = null;
-      }
+      // off-screen
+      if (block.y >= canvas.height) block = null;
     }
 
-    // Score & difficulty
+    // update score & difficulty
     score++;
     if (score > highScore) {
       highScore = score;
@@ -104,15 +94,22 @@ if (canvas) {
   }
 
   function draw() {
-    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Draw player
-    ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
-    // Draw block
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // draw player
+    ctx.fillStyle = 'lime';
+    ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
+
+    // draw block
     if (block) {
-      ctx.fillStyle = 'red'; ctx.fillRect(block.x, block.y, block.w, block.h);
+      ctx.fillStyle = 'red';
+      ctx.fillRect(block.x, block.y, block.w, block.h);
     }
-    // Draw score
-    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
+
+    // draw score
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
@@ -125,13 +122,10 @@ if (canvas) {
 
   function resetGame() {
     playerX = canvas.width / 2 - playerWidth / 2;
-    leftPressed = false;
-    rightPressed = false;
     score = 0;
     blockSpeed = 1;
     block = null;
     lastSpawnTime = Date.now() - spawnDelay;
-    musicStarted = false;
     if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
 
