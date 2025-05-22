@@ -1,9 +1,10 @@
-// Snake game code
+// script.js
+
 const canvas = document.getElementById('game');
 if (canvas) {
   // —— music setup —— 
-  const bgMusic      = document.getElementById('bg-music');
-  let musicStarted   = false;
+  const bgMusic    = document.getElementById('bg-music');
+  let musicStarted = false;
 
   // —— high score setup ——  
   const highScoreEl = document.getElementById('high-score');
@@ -22,6 +23,7 @@ if (canvas) {
   let foods = [randomPos()];
   let score = 0;
 
+  // invincibility for first 5 seconds
   const invincibleUntil = Date.now() + 5000;
 
   document.addEventListener('keydown', e => {
@@ -47,19 +49,27 @@ if (canvas) {
   }
 
   function update() {
-    if (vel.x === 0 && vel.y === 0) return;  // wait for first move
+    // wait until first move
+    if (vel.x === 0 && vel.y === 0) return;
 
     // advance head
     const head = { x: snake[0].x + vel.x, y: snake[0].y + vel.y };
     snake.unshift(head);
 
-    // collision (after invincibility)
+    // —— collision (after invincibility) —— 
     if (Date.now() >= invincibleUntil) {
       const hitWall = head.x < 0 || head.y < 0
                    || head.x >= tileCount || head.y >= tileCount;
       const hitSelf = snake.slice(1)
                             .some(seg => seg.x === head.x && seg.y === head.y);
+
       if (hitWall || hitSelf) {
+        // stop music immediately
+        if (bgMusic) {
+          bgMusic.pause();
+          bgMusic.currentTime = 0;
+        }
+        // block until user presses OK
         alert(`Game Over! Score: ${score}`);
         resetGame();
         return;
@@ -76,12 +86,18 @@ if (canvas) {
 
     let ateFresh = false;
 
-    // eating logic
+    // —— eating logic —— 
     for (let i = 0; i < foods.length; i++) {
       const f = foods[i];
       if (head.x === f.x && head.y === f.y) {
         const age = Date.now() - f.spawnTime;
         if (age > 5000) {
+          // stop music immediately
+          if (bgMusic) {
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+          }
+          // block until user presses OK
           alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
           resetGame();
           return;
@@ -156,9 +172,8 @@ if (canvas) {
       bgMusic.pause();
       bgMusic.currentTime = 0;
     }
-
-    // note: high score remains
   }
 
+  // run the loop every 100ms
   setInterval(gameLoop, 100);
 }
