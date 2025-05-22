@@ -1,4 +1,4 @@
-// Dodge game code: pointerdown for touch & click
+// Dodge game code: pointer and touch controls
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -48,20 +48,28 @@ if (canvas) {
     const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
       startMusic();
-      if (key === 'arrowleft' || key === 'a') movePlayer('left');
-      else movePlayer('right');
+      movePlayer((key === 'arrowleft' || key === 'a') ? 'left' : 'right');
     }
   });
 
-  // Pointer (mouse or touch) controls on canvas
+  // Pointer (mouse or modern touch) controls
   canvas.addEventListener('pointerdown', e => {
     e.preventDefault();
     startMusic();
-    // e.offsetX works for pointer events
+    // pointer events provide offsetX
     const x = e.offsetX;
-    if (x < canvas.width / 2) movePlayer('left');
-    else movePlayer('right');
+    movePlayer(x < canvas.width / 2 ? 'left' : 'right');
   });
+
+  // Touch fallback for browsers without pointer events
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    startMusic();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    movePlayer(x < canvas.width / 2 ? 'left' : 'right');
+  }, { passive: false });
 
   function gameLoop() {
     update();
@@ -84,14 +92,15 @@ if (canvas) {
     }
     if (block) {
       block.y += blockSpeed;
-      // collision
+      // collision detection
       if (
         playerX < block.x + block.w &&
         playerX + playerWidth > block.x &&
         playerY < block.y + block.h &&
         playerY + playerHeight > block.y
       ) {
-        endGame(); return;
+        endGame();
+        return;
       }
       if (block.y >= canvas.height) block = null;
     }
@@ -105,12 +114,13 @@ if (canvas) {
   }
 
   function draw() {
+    // normal background
     ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // player
+    // draw player
     ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
-    // block
+    // draw block
     if (block) { ctx.fillStyle = block.color; ctx.fillRect(block.x, block.y, block.w, block.h); }
-    // score
+    // draw score
     ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
