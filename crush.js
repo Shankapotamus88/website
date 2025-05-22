@@ -1,4 +1,4 @@
-// Dodge game code: single block, player reset, random block colors
+// Dodge game code: single purple block, player reset, arrow or a/l movement
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -25,16 +25,9 @@ if (canvas) {
   const spawnDelay = 500; // ms between blocks
   let lastSpawnTime = Date.now() - spawnDelay;
 
-  // Helper: generate random color string
-  function randomColor() {
-    const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    return `rgb(${r},${g},${b})`;
-  }
-
   document.addEventListener('keydown', e => {
-    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    const key = e.key.toLowerCase(); // normalize to lowercase
+    if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
       // start music on first move
       if (!musicStarted && bgMusic) {
         bgMusic.volume = 0.5;
@@ -42,7 +35,7 @@ if (canvas) {
         musicStarted = true;
       }
       const centerX = canvas.width / 2 - playerWidth / 2;
-      if (e.key === 'ArrowLeft') {
+      if (key === 'arrowleft' || key === 'a') {
         // move halfway from center to left
         playerX = centerX / 2;
       } else {
@@ -66,7 +59,7 @@ if (canvas) {
       const w = canvas.width / 2;
       const h = 300;
       const x = side === 0 ? 0 : w;
-      block = { x, y: -h, w, h, color: randomColor() };
+      block = { x, y: -h, w, h, color: 'purple' };
       lastSpawnTime = Date.now();
 
       // reset player to center
@@ -110,7 +103,7 @@ if (canvas) {
     ctx.fillStyle = 'lime';
     ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
 
-    // draw block with its random color
+    // draw block in purple
     if (block) {
       ctx.fillStyle = block.color;
       ctx.fillRect(block.x, block.y, block.w, block.h);
