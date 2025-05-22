@@ -1,7 +1,21 @@
-// Dodge game code: pointer and touch controls
+// Dodge game code: responsive canvas scaling & controls
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
+
+  // —— responsive scaling ——
+  let scaled = false;
+  function scaleCanvas() {
+    if (scaled) return;
+    // fill available screen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // update player position baseline
+    playerY = canvas.height - playerHeight;
+    // center player
+    playerX = canvas.width / 2 - playerWidth / 2;
+    scaled = true;
+  }
 
   // —— background music setup ——
   const bgMusic = document.getElementById('bg-music');
@@ -15,7 +29,7 @@ if (canvas) {
   // Player setup
   const playerWidth = 20;
   const playerHeight = 20;
-  const playerY = canvas.height - playerHeight;
+  let playerY = canvas.height - playerHeight;
   let playerX = canvas.width / 2 - playerWidth / 2;
 
   // Game variables
@@ -43,27 +57,29 @@ if (canvas) {
     }
   }
 
-  // Keyboard A/L or Arrow controls
+  // Keyboard controls
   document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
     if (['arrowleft', 'arrowright', 'a', 'l'].includes(key)) {
+      scaleCanvas();
       startMusic();
       movePlayer((key === 'arrowleft' || key === 'a') ? 'left' : 'right');
     }
   });
 
-  // Pointer (mouse or modern touch) controls
+  // Pointer controls (mouse or touch)
   canvas.addEventListener('pointerdown', e => {
     e.preventDefault();
+    scaleCanvas();
     startMusic();
-    // pointer events provide offsetX
     const x = e.offsetX;
     movePlayer(x < canvas.width / 2 ? 'left' : 'right');
   });
 
-  // Touch fallback for browsers without pointer events
+  // Touch fallback
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
+    scaleCanvas();
     startMusic();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
@@ -78,7 +94,7 @@ if (canvas) {
   }
 
   function update() {
-    // spawn block if none and delay passed
+    // spawn block
     if (!block && Date.now() - lastSpawnTime >= spawnDelay) {
       const side = Math.random() < 0.5 ? 0 : 1;
       const w = canvas.width / 2;
@@ -86,21 +102,18 @@ if (canvas) {
       const x = side === 0 ? 0 : w;
       block = { x, y: -h, w, h, color: 'purple' };
       lastSpawnTime = Date.now();
-      // reset player
-      playerX = canvas.width / 2 - playerWidth / 2;
+      playerX = canvas.width / 2 - playerWidth / 2; // reset
       musicStarted = false;
     }
     if (block) {
       block.y += blockSpeed;
-      // collision detection
       if (
         playerX < block.x + block.w &&
         playerX + playerWidth > block.x &&
         playerY < block.y + block.h &&
         playerY + playerHeight > block.y
       ) {
-        endGame();
-        return;
+        endGame(); return;
       }
       if (block.y >= canvas.height) block = null;
     }
@@ -114,14 +127,13 @@ if (canvas) {
   }
 
   function draw() {
-    // normal background
-    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // draw player
-    ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
-    // draw block
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'lime';
+    ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
     if (block) { ctx.fillStyle = block.color; ctx.fillRect(block.x, block.y, block.w, block.h); }
-    // draw score
-    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
+    ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
   function endGame() {
