@@ -30,6 +30,8 @@ if (canvas) {
   let spawnTimer = 0;
   const spawnInterval = 60; // frames between spawns
 
+  const minGap = playerWidth * 3; // minimum gap between blocks
+
   document.addEventListener('keydown', e => {
     if (!musicStarted && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
       if (bgMusic) {
@@ -71,17 +73,27 @@ if (canvas) {
     spawnTimer++;
     if (spawnTimer >= spawnInterval) {
       spawnTimer = 0;
-      const count = 1 + Math.floor(Math.random()*2); // spawn 1-2 blocks
-      for (let i=0; i<count; i++) {
+      const toSpawn = 1 + Math.floor(Math.random() * 2); // 1-2 blocks
+      const newBlocks = [];
+      for (let i = 0; i < toSpawn; i++) {
         const minSizeX = playerWidth * 2;
         const maxSizeX = playerWidth * 5;
         const minSizeY = playerHeight * 2;
         const maxSizeY = playerHeight * 5;
         const w = minSizeX + Math.random() * (maxSizeX - minSizeX);
         const h = minSizeY + Math.random() * (maxSizeY - minSizeY);
-        const x = Math.random() * (canvas.width - w);
-        blocks.push({ x, y: -h, w, h });
+        let x, attempts = 0;
+        const maxAttempts = 10;
+        do {
+          x = Math.random() * (canvas.width - w);
+          attempts++;
+        } while (
+          attempts < maxAttempts &&
+          newBlocks.concat(blocks).some(b => !(x + w + minGap <= b.x || b.x + b.w + minGap <= x))
+        );
+        newBlocks.push({ x, y: -h, w, h });
       }
+      blocks.push(...newBlocks);
     }
 
     // Move blocks
@@ -119,25 +131,29 @@ if (canvas) {
   }
 
   function draw() {
-    ctx.fillStyle = '#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Player
-    ctx.fillStyle = 'lime'; ctx.fillRect(playerX,playerY,playerWidth,playerHeight);
+    ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
     // Blocks
     ctx.fillStyle = 'red';
-    for (let b of blocks) ctx.fillRect(b.x,b.y,b.w,b.h);
+    blocks.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
     // Score
-    ctx.fillStyle = '#fff'; ctx.font='16px sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
   function resetGame() {
-    playerX = canvas.width/2 - playerWidth/2;
-    playerY = canvas.height/2 - playerHeight/2;
+    playerX = canvas.width / 2 - playerWidth / 2;
+    playerY = canvas.height / 2 - playerHeight / 2;
+    leftPressed = false;
+    rightPressed = false;
+    upPressed = false;
+    downPressed = false;
     blocks = [];
     score = 0;
     blockSpeed = 1;
     spawnTimer = 0;
-    if (bgMusic) { musicStarted=false; }
+    musicStarted = false;
   }
 
   gameLoop();
