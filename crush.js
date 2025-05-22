@@ -1,4 +1,4 @@
-// Dodge game code: teleport half-way horizontal movement
+// Dodge game code: blocks with random colors
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -24,6 +24,14 @@ if (canvas) {
   let blockSpeed = 1;
   const spawnDelay = 500; // ms between blocks
   let lastSpawnTime = Date.now() - spawnDelay;
+
+  // Helper: generate random color string
+  function randomColor() {
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    return `rgb(${r},${g},${b})`;
+  }
 
   document.addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -58,7 +66,7 @@ if (canvas) {
       const w = canvas.width / 2;
       const h = 300;
       const x = side === 0 ? 0 : w;
-      block = { x, y: -h, w, h };
+      block = { x, y: -h, w, h, color: randomColor() };
       lastSpawnTime = Date.now();
 
       // reset player to center
@@ -101,9 +109,9 @@ if (canvas) {
     ctx.fillStyle = 'lime';
     ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
 
-    // draw block
+    // draw block with its random color
     if (block) {
-      ctx.fillStyle = 'red';
+      ctx.fillStyle = block.color;
       ctx.fillRect(block.x, block.y, block.w, block.h);
     }
 
