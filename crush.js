@@ -1,4 +1,4 @@
-// Dodge game code: horizontal movement & half-screen blocks
+// Dodge game code: single block & 0.5s delay
 const canvas = document.getElementById('game');
 if (canvas) {
   const ctx = canvas.getContext('2d');
@@ -23,10 +23,11 @@ if (canvas) {
   let rightPressed = false;
   let score = 0;
 
-  let blocks = [];
+  let block = null;
   let blockSpeed = 1;
-  let spawnTimer = 0;
-  const spawnInterval = 60; // frames between spawns
+
+  const spawnDelay = 500; // milliseconds
+  let lastSpawnTime = Date.now() - spawnDelay;
 
   document.addEventListener('keydown', e => {
     // start music on first horizontal input
@@ -58,37 +59,32 @@ if (canvas) {
     if (rightPressed) playerX += playerSpeed;
     playerX = Math.max(0, Math.min(canvas.width - playerWidth, playerX));
 
-    // Spawn new block
-    spawnTimer++;
-    if (spawnTimer >= spawnInterval) {
-      spawnTimer = 0;
-      // half-screen block, left or right
+    // Spawn single block after delay
+    if (!block && Date.now() - lastSpawnTime >= spawnDelay) {
       const side = Math.random() < 0.5 ? 0 : 1;
       const w = canvas.width / 2;
       const h = 300;
       const x = side === 0 ? 0 : w;
-      blocks.push({ x, y: -h, w, h });
+      block = { x, y: -h, w, h };
+      lastSpawnTime = Date.now();
     }
 
-    // Move blocks
-    for (let b of blocks) b.y += blockSpeed;
-
-    // Remove off-screen blocks
-    blocks = blocks.filter(b => b.y < canvas.height);
-
-    // Collision detection
-    for (let b of blocks) {
+    // Move block
+    if (block) {
+      block.y += blockSpeed;
+      // Collision detection
       if (
-        playerX < b.x + b.w &&
-        playerX + playerWidth > b.x &&
-        playerY < b.y + b.h &&
-        playerY + playerHeight > b.y
+        playerX < block.x + block.w &&
+        playerX + playerWidth > block.x &&
+        playerY < block.y + block.h &&
+        playerY + playerHeight > block.y
       ) {
-        // stop music
-        if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
-        const restart = confirm(`Game Over! Score: ${score}\nPress OK to play again.`);
-        if (restart) resetGame();
+        endGame();
         return;
+      }
+      // Remove after off-screen
+      if (block.y >= canvas.height) {
+        block = null;
       }
     }
 
@@ -106,24 +102,31 @@ if (canvas) {
     ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Draw player
     ctx.fillStyle = 'lime'; ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
-    // Draw blocks
-    ctx.fillStyle = 'red';
-    blocks.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    // Draw block
+    if (block) {
+      ctx.fillStyle = 'red'; ctx.fillRect(block.x, block.y, block.w, block.h);
+    }
     // Draw score
     ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
+  }
+
+  function endGame() {
+    // stop music
+    if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
+    const restart = confirm(`Game Over! Score: ${score}\nPress OK to play again.`);
+    if (restart) resetGame();
   }
 
   function resetGame() {
     playerX = canvas.width / 2 - playerWidth / 2;
     leftPressed = false;
     rightPressed = false;
-    blocks = [];
     score = 0;
     blockSpeed = 1;
-    spawnTimer = 0;
+    block = null;
+    lastSpawnTime = Date.now() - spawnDelay;
     musicStarted = false;
-    if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
     if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
 
