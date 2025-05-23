@@ -9,8 +9,8 @@ if (!canvas) {
   const tileSize  = 20;
   const tileCount = canvas.width / tileSize;
 
-  const bgMusic      = document.getElementById('bg-music');
-  let musicStarted   = false;
+  const bgMusic    = document.getElementById('bg-music');
+  let musicStarted = false;
 
   const highScoreEl = document.getElementById('high-score');
   let highScore      = parseInt(localStorage.getItem('snake-highscore') || '0', 10);
@@ -23,11 +23,11 @@ if (!canvas) {
   let humanVel   = { x: 0, y: 0 };
   let humanStart = null;
 
-  let aiSnakes   = [];
-  let foods      = [];
-  let score      = 0;
+  let aiSnakes = [];
+  let foods    = [];
+  let score    = 0;
+  let gameStarted = false;
   const invincibleUntil = Date.now() + 5000;
-  let gameStarted       = false;
 
   let touchStartX = 0, touchStartY = 0;
 
@@ -44,15 +44,15 @@ if (!canvas) {
     score       = 0;
     foods       = [randomPos()];
 
-    // randomize corners
+    // randomize spawn corners
     const corners = [
-      { x: 0,              y: 0              },
-      { x: tileCount - 1,  y: 0              },
-      { x: 0,              y: tileCount - 1  },
-      { x: tileCount - 1,  y: tileCount - 1  }
+      { x: 0,             y: 0             },
+      { x: tileCount - 1, y: 0             },
+      { x: 0,             y: tileCount - 1 },
+      { x: tileCount - 1, y: tileCount - 1 }
     ].sort(() => Math.random() - 0.5);
 
-    // human snake at first corner
+    // human snake in first corner
     humanStart = { ...corners[0] };
     humanSnake = [{ ...humanStart }];
     humanVel   = { x: 0, y: 0 };
@@ -68,22 +68,19 @@ if (!canvas) {
       });
     }
 
-    // update high score display
     if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
 
   function updateHuman() {
     if (!gameStarted || (humanVel.x === 0 && humanVel.y === 0)) return;
-    if (!humanSnake.length) return;
-
     const head = { x: humanSnake[0].x + humanVel.x, y: humanSnake[0].y + humanVel.y };
     humanSnake.unshift(head);
 
-    // wall & self collision
+    // collision wall/self/AI
     if (Date.now() >= invincibleUntil) {
       const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
-      const hitSelf = humanSnake.slice(1).some(seg => seg.x === head.x && seg.y === head.y);
-      const hitAI   = aiSnakes.some(s => s.segments.some(seg => seg.x === head.x && seg.y === head.y));
+      const hitSelf = humanSnake.slice(1).some(s => s.x === head.x && s.y === head.y);
+      const hitAI   = aiSnakes.some(ai => ai.segments.some(s => s.x === head.x && s.y === head.y));
       if (hitWall || hitSelf || hitAI) {
         alert(`Game Over! Score: ${score}`);
         resetGame();
@@ -91,75 +88,88 @@ if (!canvas) {
       }
     }
 
-    const ateFresh = handleEating(humanSnake, true);
-    if (!ateFresh) humanSnake.pop();
+    // eating fresh only (rotten handled like death)
+    const foodIndex = foods.findIndex(f => f.x === head.x && f.y === head.y);
+    if (foodIndex !== -1) {
+      const f = foods[foodIndex];
+      const age = Date.now() - f.spawnTime;
+      foods.splice(foodIndex, 1);
+      foods.push(randomPos());
+      if (age > 5000) {
+        alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
+        resetGame();
+        return;
+      } else {
+        score++;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('snake-highscore', highScore);
+          if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
+        }
+      }
+    } else {
+      humanSnake.pop();
+    }
   }
 
   function updateAI() {
     if (!gameStarted) return;
-    aiSnakes.forEach(snakeObj => {
-      const head = snakeObj.segments[0];
-      if (!head) return;
+    // iterate backwards to allow removal
+    for (let i = aiSnakes.length - 1; i >= 0; i--) {
+      const ai = aiSnakes[i];
+      const head = ai.segments[0];
+      if (!head) continue;
 
-      // simple AI: move toward nearest food
-      let target = foods[0];
-      let minDist = Infinity;
+      // move toward nearest food
+      let target = foods[0], dist = Infinity;
       foods.forEach(f => {
         const d = Math.hypot(f.x - head.x, f.y - head.y);
-        if (d < minDist) { minDist = d; target = f; }
+        if (d < dist) { dist = d; target = f; }
       });
       const dx = target.x - head.x, dy = target.y - head.y;
-      snakeObj.vel = Math.abs(dx) > Math.abs(dy)
-        ? { x: dx > 0 ? 1 : -1, y: 0 }
-        : { x: 0, y: dy > 0 ? 1 : -1 };
+      ai.vel = Math.abs(dx) > Math.abs(dy) ? { x: dx > 0 ? 1 : -1, y: 0 } : { x: 0, y: dy > 0 ? 1 : -1 };
 
-      // move
-      const newHead = { x: head.x + snakeObj.vel.x, y: head.y + snakeObj.vel.y };
-      snakeObj.segments.unshift(newHead);
+      const newHead = { x: head.x + ai.vel.x, y: head.y + ai.vel.y };
+      ai.segments.unshift(newHead);
 
-      // collision detection
-      const collidedSelf = snakeObj.segments.slice(1).some(seg => seg.x === newHead.x && seg.y === newHead.y);
-      const collidedHuman = humanSnake.some(seg => seg.x === newHead.x && seg.y === newHead.y);
-      const collidedOtherAI = aiSnakes.some(other =>
-        other !== snakeObj && other.segments.some(seg => seg.x === newHead.x && seg.y === newHead.y)
-      );
-      if (collidedSelf || collidedHuman || collidedOtherAI) {
-        // respawn this AI
-        snakeObj.segments = [{ ...snakeObj.startPos }];
-        snakeObj.vel = { x: 0, y: 0 };
-        return;
+      // collision with wall
+      if (newHead.x < 0 || newHead.y < 0 || newHead.x >= tileCount || newHead.y >= tileCount) {
+        aiSnakes.splice(i, 1);
+        continue;
+      }
+      // collision self
+      if (ai.segments.slice(1).some(s => s.x === newHead.x && s.y === newHead.y)) {
+        aiSnakes.splice(i, 1);
+        continue;
+      }
+      // collision other AI
+      if (aiSnakes.some((other, idx) => idx !== i && other.segments.some(s => s.x === newHead.x && s.y === newHead.y))) {
+        aiSnakes.splice(i, 1);
+        continue;
+      }
+      // collision human
+      if (humanSnake.some(s => s.x === newHead.x && s.y === newHead.y)) {
+        aiSnakes.splice(i, 1);
+        continue;
       }
 
       // eating
-      const ateFresh = handleEating(snakeObj.segments, false);
-      if (!ateFresh) snakeObj.segments.pop();
-    });
-  }
-
-  function handleEating(snakeArr, isHuman) {
-    const head = snakeArr[0];
-    for (let i = 0; i < foods.length; i++) {
-      const f = foods[i];
-      if (head.x === f.x && head.y === f.y) {
+      const fi = foods.findIndex(f => f.x === newHead.x && f.y === newHead.y);
+      if (fi !== -1) {
+        const f = foods[fi]; foods.splice(fi, 1); foods.push(randomPos());
         const age = Date.now() - f.spawnTime;
-        const rotten = age > 5000;
-        if (rotten && isHuman) {
-          alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
-          resetGame();
+        if (age > 5000) {
+          // ate rotten -> die
+          aiSnakes.splice(i, 1);
+          continue;
         }
-        if (!rotten && isHuman) {
-          score++;
-          if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('snake-highscore', highScore);
-          }
-        }
-        foods.splice(i, 1);
-        foods.push(randomPos());
-        return true;
+        // fresh -> grow (do not pop)
+        continue;
       }
+
+      // normal move: shrink
+      ai.segments.pop();
     }
-    return false;
   }
 
   function draw() {
@@ -168,74 +178,59 @@ if (!canvas) {
 
     // draw food
     foods.forEach(f => {
-      const age = gameStarted ? Date.now() - f.spawnTime : 0;
+      const age = Date.now() - f.spawnTime;
       ctx.fillStyle = age > 5000 ? 'white' : 'red';
       ctx.fillRect(f.x * tileSize, f.y * tileSize, tileSize, tileSize);
     });
 
-    // draw human snake
+    // draw human
     ctx.fillStyle = HUMAN_COLOR;
-    humanSnake.forEach(seg =>
-      ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize)
-    );
+    humanSnake.forEach(s => ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize));
 
-    // draw AI snakes
-    aiSnakes.forEach(snakeObj => {
-      ctx.fillStyle = snakeObj.color;
-      snakeObj.segments.forEach(seg =>
-        ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize)
-      );
+    // draw AIs
+    aiSnakes.forEach(ai => {
+      ctx.fillStyle = ai.color;
+      ai.segments.forEach(s => ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize));
     });
 
     // draw score
-    ctx.fillStyle = '#fff';
-    ctx.font      = '16px sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif';
     ctx.fillText(`Score: ${score}`, 10, canvas.height - 10);
   }
 
   function resetGame() {
     musicStarted = false;
     gameStarted   = false;
-    if (bgMusic) {
-      bgMusic.pause();
-      bgMusic.currentTime = 0;
-    }
+    if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
     startGame();
   }
 
-  // input handlers
+  // input
   document.addEventListener('keydown', e => {
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
-      if (!musicStarted && bgMusic) { bgMusic.volume = 0.5; bgMusic.play(); musicStarted = true; }
+      if (!musicStarted && bgMusic) { bgMusic.volume=0.5; bgMusic.play(); musicStarted=true; }
       if (!gameStarted) startGame();
-      if (e.key === 'ArrowUp'    && humanVel.y === 0) humanVel = { x:0, y:-1 };
-      if (e.key === 'ArrowDown'  && humanVel.y === 0) humanVel = { x:0, y: 1 };
-      if (e.key === 'ArrowLeft'  && humanVel.x === 0) humanVel = { x:-1,y:0 };
-      if (e.key === 'ArrowRight' && humanVel.x === 0) humanVel = { x: 1,y:0 };
+      if (e.key==='ArrowUp'    && humanVel.y===0) humanVel={x:0,y:-1};
+      if (e.key==='ArrowDown'  && humanVel.y===0) humanVel={x:0,y:1};
+      if (e.key==='ArrowLeft'  && humanVel.x===0) humanVel={x:-1,y:0};
+      if (e.key==='ArrowRight' && humanVel.x===0) humanVel={x:1,y:0};
     }
   });
 
   canvas.addEventListener('touchstart', e => {
-    const t = e.touches[0];
-    touchStartX = t.clientX; touchStartY = t.clientY;
+    const t = e.touches[0]; touchStartX = t.clientX; touchStartY = t.clientY;
   }, { passive: true });
-
   canvas.addEventListener('touchend', e => {
     const t  = e.changedTouches[0];
-    const dx = t.clientX - touchStartX;
-    const dy = t.clientY - touchStartY;
-    if (Math.hypot(dx,dy) >= 20) {
-      if (Math.abs(dx) > Math.abs(dy) && humanVel.x===0) humanVel = { x: dx>0?1:-1, y:0 };
-      else if (Math.abs(dy) >= Math.abs(dx) && humanVel.y===0) humanVel = { x:0, y: dy>0?1:-1 };
+    const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+    if (Math.hypot(dx,dy)>=20) {
+      if (Math.abs(dx)>Math.abs(dy) && humanVel.x===0) humanVel={x:dx>0?1:-1,y:0};
+      else if (Math.abs(dy)>=Math.abs(dx) && humanVel.y===0) humanVel={x:0,y:dy>0?1:-1};
       if (!gameStarted) startGame();
     }
   }, { passive: true });
 
-  // start everything
+  // launch
   startGame();
-  setInterval(() => {
-    updateHuman();
-    updateAI();
-    draw();
-  }, 100);
+  setInterval(() => { updateHuman(); updateAI(); draw(); }, 100);
 }
