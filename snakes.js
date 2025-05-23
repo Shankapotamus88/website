@@ -250,5 +250,22 @@ if (!canvas) {
     const dy = t.clientY - touchStartY;
     if (Math.hypot(dx, dy) >= 20) {
       if (!gameStarted) startGame();
-      else if (Math.abs(dx) > Math.abs(dy) && humanVel.x === 0) humanVel = { x: dx > 0 ? 1 : -1, y: 0 };
-      else if (Math.abs(dy) >= Math.abs(dx) && humanVel.y === 0) humanVel = { x
+      else if (Math.abs(dx) > Math.abs(dy) && humanVel.x === 0) {
+        humanVel = { x: dx > 0 ? 1 : -1, y: 0 };
+      } else if (Math.abs(dy) >= Math.abs(dx) && humanVel.y === 0) {
+        humanVel = { x: 0, y: dy > 0 ? 1 : -1 };
+      }
+    }
+  }, { passive: true });
+
+  // Initial load: place snakes and draw
+  initPositions();
+  draw();
+
+  // Main game loop
+  setInterval(() => {
+    updateHuman();
+    updateAI();
+    draw();
+  }, 100);
+}
