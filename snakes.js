@@ -29,14 +29,23 @@ if (!canvas) {
   let touchStartX = 0, touchStartY = 0;
 
   function randomPos() {
-    return { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount), spawnTime: Date.now(), spawnedNew: false };
+    return {
+      x: Math.floor(Math.random() * tileCount),
+      y: Math.floor(Math.random() * tileCount),
+      spawnTime: Date.now(),
+      spawnedNew: false
+    };
   }
 
   function isCellSafe(x, y) {
     if (x < 0 || y < 0 || x >= tileCount || y >= tileCount) return false;
     if (humanSnake.some(seg => seg.x === x && seg.y === y)) return false;
-    for (const ai of aiSnakes) if (ai.segments.some(seg => seg.x === x && seg.y === y)) return false;
-    for (const f of foods) if (f.x === x && f.y === y && (Date.now() - f.spawnTime) > 5000) return false;
+    for (const ai of aiSnakes) {
+      if (ai.segments.some(seg => seg.x === x && seg.y === y)) return false;
+    }
+    for (const f of foods) {
+      if (f.x === x && f.y === y && Date.now() - f.spawnTime > 5000) return false;
+    }
     return true;
   }
 
@@ -63,10 +72,16 @@ if (!canvas) {
     score = 0;
     invincibleUntil = Date.now() + 5000;
     foods = [randomPos()];
-    // Do not reset positions; keep initial corner placements
     if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
-);
+
+  function spawnFreshFood() {
+    foods.forEach(f => {
+      if (!f.spawnedNew && Date.now() - f.spawnTime > 5000) {
+        foods.push(randomPos());
+        f.spawnedNew = true;
+      }
+    });
   }
 
   function updateHuman() {
@@ -81,6 +96,7 @@ if (!canvas) {
     }
 
     spawnFreshFood();
+
     const idx = foods.findIndex(f => f.x === head.x && f.y === head.y);
     if (idx !== -1) {
       const f = foods[idx];
@@ -112,13 +128,17 @@ if (!canvas) {
       if (!head) continue;
 
       spawnFreshFood();
+
       let target = null;
       let minD = Infinity;
       foods.forEach(f => {
         const age = Date.now() - f.spawnTime;
         if (age <= 5000) {
           const d = Math.hypot(f.x - head.x, f.y - head.y);
-          if (d < minD) { minD = d; target = f; }
+          if (d < minD) {
+            minD = d;
+            target = f;
+          }
         }
       });
       if (!target) target = foods[0];
@@ -129,7 +149,9 @@ if (!canvas) {
         { x: head.x, y: head.y + 1 },
         { x: head.x, y: head.y - 1 }
       ];
-      moves.sort((a, b) => Math.hypot(a.x - target.x, a.y - target.y) - Math.hypot(b.x - target.x, b.y - target.y));
+      moves.sort((a, b) =>
+        Math.hypot(a.x - target.x, a.y - target.y) - Math.hypot(b.x - target.x, b.y - target.y)
+      );
 
       let moved = false;
       for (const m of moves) {
@@ -140,7 +162,10 @@ if (!canvas) {
           break;
         }
       }
-      if (!moved) { aiSnakes.splice(i, 1); continue; }
+      if (!moved) {
+        aiSnakes.splice(i, 1);
+        continue;
+      }
 
       const newHead = ai.segments[0];
       const fi = foods.findIndex(f => f.x === newHead.x && f.y === newHead.y);
@@ -149,7 +174,10 @@ if (!canvas) {
         foods.splice(fi, 1);
         foods.push(randomPos());
         const age = Date.now() - f.spawnTime;
-        if (age > 5000) { aiSnakes.splice(i, 1); continue; }
+        if (age > 5000) {
+          aiSnakes.splice(i, 1);
+          continue;
+        }
         continue;
       }
       ai.segments.pop();
@@ -167,11 +195,15 @@ if (!canvas) {
     });
 
     ctx.fillStyle = HUMAN_COLOR;
-    humanSnake.forEach(seg => ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize));
+    humanSnake.forEach(seg =>
+      ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize)
+    );
 
     aiSnakes.forEach(ai => {
       ctx.fillStyle = ai.color;
-      ai.segments.forEach(seg => ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize));
+      ai.segments.forEach(seg =>
+        ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize)
+      );
     });
 
     ctx.fillStyle = '#fff';
@@ -182,13 +214,20 @@ if (!canvas) {
   function resetGame() {
     musicStarted = false;
     gameStarted = false;
-    if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
+    if (bgMusic) {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
     initPositions();
   }
 
   document.addEventListener('keydown', e => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-      if (!musicStarted && bgMusic) { bgMusic.volume = 0.5; bgMusic.play(); musicStarted = true; }
+      if (!musicStarted && bgMusic) {
+        bgMusic.volume = 0.5;
+        bgMusic.play();
+        musicStarted = true;
+      }
       if (!gameStarted) startGame();
       else {
         if (e.key === 'ArrowUp' && humanVel.y === 0) humanVel = { x: 0, y: -1 };
@@ -199,10 +238,17 @@ if (!canvas) {
     }
   });
 
-  canvas.addEventListener('touchstart', e => { const t = e.touches[0]; touchStartX = t.clientX; touchStartY = t.clientY; }, { passive: true });
-  canvas.addEventListener('touchend', e => { const t = e.changedTouches[0]; const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY; if (Math.hypot(dx, dy) >= 20) { if (!gameStarted) startGame(); else if (Math.abs(dx) > Math.abs(dy) && humanVel.x === 0) humanVel = { x: dx > 0 ? 1 : -1, y: 0 }; else if (Math.abs(dy) >= Math.abs(dx) && humanVel.y === 0) humanVel = { x: 0, y: dy > 0 ? 1 : -1 }; } }, { passive: true });
+  canvas.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+  }, { passive: true });
 
-  initPositions();
-  draw();
-  setInterval(() => { updateHuman(); updateAI(); draw(); }, 100);
-}
+  canvas.addEventListener('touchend', e => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    if (Math.hypot(dx, dy) >= 20) {
+      if (!gameStarted) startGame();
+      else if (Math.abs(dx) > Math.abs(dy) && humanVel.x === 0) humanVel = { x: dx > 0 ? 1 : -1, y: 0 };
+      else if (Math.abs(dy) >= Math.abs(dx) && humanVel.y === 0) humanVel = { x
