@@ -76,11 +76,14 @@ if (!canvas) {
   }
 
   function spawnFreshFood() {
-    foods.forEach(f => {
-      if (!f.spawnedNew && Date.now() - f.spawnTime > 5000) {
-        foods.push(randomPos());
-        f.spawnedNew = true;
+    // Replace rotten food (older than 5s) with fresh, rather than accumulating
+    for (let i = 0; i < foods.length; i++) {
+      const f = foods[i];
+      if (Date.now() - f.spawnTime > 5000) {
+        foods[i] = randomPos();
       }
+    }
+  }
     });
   }
 
