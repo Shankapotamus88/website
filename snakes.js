@@ -60,20 +60,13 @@ if (!canvas) {
 
   function startGame() {
     gameStarted = true;
-    score       = 0;
+    score = 0;
     invincibleUntil = Date.now() + 5000;
-    foods       = [randomPos()];
-    initPositions();
+    foods = [randomPos()];
+    // Do not reset positions; keep initial corner placements
     if (highScoreEl) highScoreEl.textContent = `High Score: ${highScore}`;
   }
-
-  function spawnFreshFood() {
-    foods.forEach(f => {
-      if (!f.spawnedNew && Date.now() - f.spawnTime > 5000) {
-        foods.push(randomPos());
-        f.spawnedNew = true;
-      }
-    });
+);
   }
 
   function updateHuman() {
