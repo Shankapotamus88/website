@@ -21,6 +21,8 @@ if (!canvas) {
 
   let humanSnake = [];
   let humanVel   = { x: 0, y: 0 };
+  let humanStart = null;
+
   let aiSnakes   = [];
   let foods      = [];
   let score      = 0;
@@ -51,13 +53,15 @@ if (!canvas) {
     ].sort(() => Math.random() - 0.5);
 
     // human snake at first corner
-    humanSnake = [{ ...corners[0] }];
+    humanStart = { ...corners[0] };
+    humanSnake = [{ ...humanStart }];
     humanVel   = { x: 0, y: 0 };
 
     // AI snakes in remaining corners
     aiSnakes = [];
     for (let i = 0; i < 3; i++) {
       aiSnakes.push({
+        startPos: { ...corners[i + 1] },
         segments: [{ ...corners[i + 1] }],
         vel:      { x: 0, y: 0 },
         color:    AI_COLORS[i]
@@ -72,16 +76,15 @@ if (!canvas) {
     if (!gameStarted || (humanVel.x === 0 && humanVel.y === 0)) return;
     if (!humanSnake.length) return;
 
-    const head = {
-      x: humanSnake[0].x + humanVel.x,
-      y: humanSnake[0].y + humanVel.y
-    };
+    const head = { x: humanSnake[0].x + humanVel.x, y: humanSnake[0].y + humanVel.y };
     humanSnake.unshift(head);
 
+    // wall & self collision
     if (Date.now() >= invincibleUntil) {
       const hitWall = head.x < 0 || head.y < 0 || head.x >= tileCount || head.y >= tileCount;
       const hitSelf = humanSnake.slice(1).some(seg => seg.x === head.x && seg.y === head.y);
-      if (hitWall || hitSelf) {
+      const hitAI   = aiSnakes.some(s => s.segments.some(seg => seg.x === head.x && seg.y === head.y));
+      if (hitWall || hitSelf || hitAI) {
         alert(`Game Over! Score: ${score}`);
         resetGame();
         return;
@@ -95,63 +98,62 @@ if (!canvas) {
   function updateAI() {
     if (!gameStarted) return;
     aiSnakes.forEach(snakeObj => {
-      if (!snakeObj.segments || !snakeObj.segments.length) return;
       const head = snakeObj.segments[0];
       if (!head) return;
 
-      // find nearest food
+      // simple AI: move toward nearest food
       let target = foods[0];
       let minDist = Infinity;
       foods.forEach(f => {
-        if (!f) return;
         const d = Math.hypot(f.x - head.x, f.y - head.y);
-        if (d < minDist) {
-          minDist = d;
-          target  = f;
-        }
+        if (d < minDist) { minDist = d; target = f; }
       });
+      const dx = target.x - head.x, dy = target.y - head.y;
+      snakeObj.vel = Math.abs(dx) > Math.abs(dy)
+        ? { x: dx > 0 ? 1 : -1, y: 0 }
+        : { x: 0, y: dy > 0 ? 1 : -1 };
 
-      const dx = target.x - head.x;
-      const dy = target.y - head.y;
-      snakeObj.vel =
-        Math.abs(dx) > Math.abs(dy)
-          ? { x: dx > 0 ? 1 : -1, y: 0 }
-          : { x: 0, y: dy > 0 ? 1 : -1 };
-
-      const newHead = {
-        x: head.x + snakeObj.vel.x,
-        y: head.y + snakeObj.vel.y
-      };
+      // move
+      const newHead = { x: head.x + snakeObj.vel.x, y: head.y + snakeObj.vel.y };
       snakeObj.segments.unshift(newHead);
 
+      // collision detection
+      const collidedSelf = snakeObj.segments.slice(1).some(seg => seg.x === newHead.x && seg.y === newHead.y);
+      const collidedHuman = humanSnake.some(seg => seg.x === newHead.x && seg.y === newHead.y);
+      const collidedOtherAI = aiSnakes.some(other =>
+        other !== snakeObj && other.segments.some(seg => seg.x === newHead.x && seg.y === newHead.y)
+      );
+      if (collidedSelf || collidedHuman || collidedOtherAI) {
+        // respawn this AI
+        snakeObj.segments = [{ ...snakeObj.startPos }];
+        snakeObj.vel = { x: 0, y: 0 };
+        return;
+      }
+
+      // eating
       const ateFresh = handleEating(snakeObj.segments, false);
       if (!ateFresh) snakeObj.segments.pop();
     });
   }
 
   function handleEating(snakeArr, isHuman) {
-    if (!snakeArr || !snakeArr.length) return false;
     const head = snakeArr[0];
     for (let i = 0; i < foods.length; i++) {
       const f = foods[i];
-      if (!f) continue;
       if (head.x === f.x && head.y === f.y) {
         const age = Date.now() - f.spawnTime;
-        if (age > 5000) {
-          if (isHuman) {
-            alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
-            resetGame();
-          }
-          return false;
+        const rotten = age > 5000;
+        if (rotten && isHuman) {
+          alert(`Oh no—you ate rotten food! Game Over. Score: ${score}`);
+          resetGame();
         }
-        if (isHuman) {
+        if (!rotten && isHuman) {
           score++;
           if (score > highScore) {
             highScore = score;
             localStorage.setItem('snake-highscore', highScore);
           }
         }
-        // replace eaten food
         foods.splice(i, 1);
         foods.push(randomPos());
         return true;
@@ -166,7 +168,6 @@ if (!canvas) {
 
     // draw food
     foods.forEach(f => {
-      if (!f) return;
       const age = gameStarted ? Date.now() - f.spawnTime : 0;
       ctx.fillStyle = age > 5000 ? 'white' : 'red';
       ctx.fillRect(f.x * tileSize, f.y * tileSize, tileSize, tileSize);
@@ -174,8 +175,8 @@ if (!canvas) {
 
     // draw human snake
     ctx.fillStyle = HUMAN_COLOR;
-    humanSnake.forEach(s =>
-      ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize)
+    humanSnake.forEach(seg =>
+      ctx.fillRect(seg.x * tileSize, seg.y * tileSize, tileSize, tileSize)
     );
 
     // draw AI snakes
@@ -205,11 +206,7 @@ if (!canvas) {
   // input handlers
   document.addEventListener('keydown', e => {
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
-      if (!musicStarted && bgMusic) {
-        bgMusic.volume = 0.5;
-        bgMusic.play();
-        musicStarted = true;
-      }
+      if (!musicStarted && bgMusic) { bgMusic.volume = 0.5; bgMusic.play(); musicStarted = true; }
       if (!gameStarted) startGame();
       if (e.key === 'ArrowUp'    && humanVel.y === 0) humanVel = { x:0, y:-1 };
       if (e.key === 'ArrowDown'  && humanVel.y === 0) humanVel = { x:0, y: 1 };
@@ -220,8 +217,7 @@ if (!canvas) {
 
   canvas.addEventListener('touchstart', e => {
     const t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
+    touchStartX = t.clientX; touchStartY = t.clientY;
   }, { passive: true });
 
   canvas.addEventListener('touchend', e => {
