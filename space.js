@@ -1,100 +1,105 @@
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
-document.body.appendChild(canvas);
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// space.js — Geometry Wars–style Space Game
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const bgMusic = document.getElementById('bg-music');
+let musicStarted = false;
 
+// High Score setup
+const highScoreEl = document.getElementById('high-score');
+let highScore = parseInt(localStorage.getItem('space-highscore') || '0', 10);
+highScoreEl.textContent = `High Score: ${highScore}`;
+
+// World dimensions (50% larger than viewport)
 const worldWidth = canvas.width * 1.5;
 const worldHeight = canvas.height * 1.5;
 
-let keys = {};
+// Game state
+const keys = {};
 let projectiles = [];
 let enemies = [];
 let stars = [];
-let spawnDelay = 5000;
-let spawnTimer = 0;
-let spawnCount = 1;
-let lastSpawn = Date.now();
+let score = 0;
 let gameOver = false;
 
+// Spawn timing
+let spawnDelay = 5000;
+let lastSpawn = Date.now();
+let spawnCount = 1;
+
+// Player setup
 const player = {
-  x: canvas.width / 2,
-  y: canvas.height / 2,
+  x: worldWidth / 2,
+  y: worldHeight / 2,
   size: 20,
   speed: 5,
-  color: "green",
+  color: 'green'
 };
 
+// Create starfield
 for (let i = 0; i < 200; i++) {
-  stars.push({
-    x: Math.random() * worldWidth,
-    y: Math.random() * worldHeight,
-  });
-}
-
-function drawPlayer() {
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
-}
-
-function movePlayer() {
-  if (keys["w"]) player.y -= player.speed;
-  if (keys["s"]) player.y += player.speed;
-  if (keys["a"]) player.x -= player.speed;
-  if (keys["d"]) player.x += player.speed;
-  player.x = Math.max(0, Math.min(worldWidth, player.x));
-  player.y = Math.max(0, Math.min(worldHeight, player.y));
+  stars.push({ x: Math.random() * worldWidth, y: Math.random() * worldHeight });
 }
 
 function drawStars() {
-  ctx.fillStyle = "black";
+  ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "white";
-  for (let s of stars) {
+  ctx.fillStyle = 'white';
+  stars.forEach(s => {
     const dx = s.x - player.x + canvas.width / 2;
     const dy = s.y - player.y + canvas.height / 2;
     if (dx >= 0 && dx < canvas.width && dy >= 0 && dy < canvas.height) {
       ctx.fillRect(dx, dy, 1, 1);
     }
-  }
-}
-
-function shoot(dirX, dirY) {
-  const mag = Math.hypot(dirX, dirY);
-  projectiles.push({
-    x: player.x,
-    y: player.y,
-    dx: (dirX / mag) * 10,
-    dy: (dirY / mag) * 10,
   });
 }
 
+function drawPlayer() {
+  const px = canvas.width / 2 - player.size / 2;
+  const py = canvas.height / 2 - player.size / 2;
+  ctx.fillStyle = player.color;
+  ctx.fillRect(px, py, player.size, player.size);
+}
+
+function movePlayer() {
+  if (keys['w'] || keys['W']) player.y -= player.speed;
+  if (keys['s'] || keys['S']) player.y += player.speed;
+  if (keys['a'] || keys['A']) player.x -= player.speed;
+  if (keys['d'] || keys['D']) player.x += player.speed;
+  player.x = Math.max(0, Math.min(worldWidth, player.x));
+  player.y = Math.max(0, Math.min(worldHeight, player.y));
+}
+
+function shoot(dirX, dirY) {
+  const mag = Math.hypot(dirX, dirY) || 1;
+  projectiles.push({ x: player.x, y: player.y, dx: (dirX / mag) * 10, dy: (dirY / mag) * 10 });
+}
+
 function drawProjectiles() {
-  ctx.fillStyle = "white";
-  for (let p of projectiles) {
-    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-  }
+  ctx.fillStyle = 'white';
+  projectiles.forEach(p => {
+    const dx = p.x - player.x + canvas.width / 2;
+    const dy = p.y - player.y + canvas.height / 2;
+    ctx.fillRect(dx - 2, dy - 2, 4, 4);
+  });
 }
 
 function updateProjectiles() {
-  for (let p of projectiles) {
-    p.x += p.dx;
-    p.y += p.dy;
-  }
+  projectiles.forEach(p => { p.x += p.dx; p.y += p.dy; });
   projectiles = projectiles.filter(p => p.x >= 0 && p.x <= worldWidth && p.y >= 0 && p.y <= worldHeight);
 }
 
 function spawnEnemies() {
   if (Date.now() - lastSpawn > spawnDelay) {
     for (let i = 0; i < spawnCount; i++) {
-      const type = ["red", "yellow", "purple"][Math.floor(Math.random() * 3)];
+      const types = ['red', 'yellow', 'purple'];
+      const type = types[Math.floor(Math.random() * types.length)];
       enemies.push({
         x: Math.random() * worldWidth,
         y: Math.random() * worldHeight,
-        dx: Math.random() < 0.5 ? 2 : -2,
-        dy: Math.random() < 0.5 ? 2 : -2,
+        dx: (Math.random() < 0.5 ? 2 : -2),
+        dy: (Math.random() < 0.5 ? 2 : -2),
         type,
-        size: 20,
+        size: 20
       });
     }
     spawnCount++;
@@ -104,123 +109,124 @@ function spawnEnemies() {
 }
 
 function drawEnemies() {
-  for (let e of enemies) {
-    ctx.fillStyle = e.type;
+  enemies.forEach(e => {
     const dx = e.x - player.x + canvas.width / 2;
     const dy = e.y - player.y + canvas.height / 2;
-    if (e.type === "red") {
+    ctx.fillStyle = e.type;
+    if (e.type === 'red') {
       ctx.beginPath();
-      ctx.moveTo(dx, dy - 10);
-      ctx.lineTo(dx - 10, dy + 10);
-      ctx.lineTo(dx + 10, dy + 10);
+      ctx.moveTo(dx, dy - e.size / 2);
+      ctx.lineTo(dx - e.size / 2, dy + e.size / 2);
+      ctx.lineTo(dx + e.size / 2, dy + e.size / 2);
       ctx.closePath();
       ctx.fill();
     } else {
-      ctx.fillRect(dx - 10, dy - 10, 20, 20);
+      ctx.fillRect(dx - e.size / 2, dy - e.size / 2, e.size, e.size);
     }
-  }
+  });
 }
 
 function updateEnemies() {
-  for (let e of enemies) {
-    if (e.type === "red") {
-      e.x += e.dx;
-      e.y += e.dy;
+  enemies.forEach(e => {
+    if (e.type === 'red') {
+      e.x += e.dx; e.y += e.dy;
       if (e.x < 0 || e.x > worldWidth) e.dx *= -1;
       if (e.y < 0 || e.y > worldHeight) e.dy *= -1;
     } else {
-      const dx = player.x - e.x;
-      const dy = player.y - e.y;
-      const dist = Math.hypot(dx, dy);
-      if (e.type === "yellow" || e.type === "purple") {
-        e.x += (dx / dist) * 2;
-        e.y += (dy / dist) * 2;
-      }
-      if (e.type === "purple") {
-        for (let p of projectiles) {
-          const pdx = p.x - e.x;
-          const pdy = p.y - e.y;
-          const pdist = Math.hypot(pdx, pdy);
-          if (pdist < 100) {
-            e.x -= (pdx / pdist) * 2;
-            e.y -= (pdy / pdist) * 2;
-          }
-        }
+      const dx1 = player.x - e.x, dy1 = player.y - e.y;
+      const dist1 = Math.hypot(dx1, dy1) || 1;
+      e.x += (dx1 / dist1) * 2; e.y += (dy1 / dist1) * 2;
+      if (e.type === 'purple') {
+        projectiles.forEach(p => {
+          const dx2 = p.x - e.x, dy2 = p.y - e.y;
+          const dist2 = Math.hypot(dx2, dy2) || 1;
+          if (dist2 < 100) { e.x -= (dx2 / dist2) * 2; e.y -= (dy2 / dist2) * 2; }
+        });
       }
     }
-  }
-  // Repel enemies
+  });
+  // Repel overlap
   for (let i = 0; i < enemies.length; i++) {
     for (let j = i + 1; j < enemies.length; j++) {
-      let dx = enemies[i].x - enemies[j].x;
-      let dy = enemies[i].y - enemies[j].y;
-      let dist = Math.hypot(dx, dy);
-      if (dist < 20 && dist > 0) {
-        dx /= dist;
-        dy /= dist;
-        enemies[i].x += dx;
-        enemies[i].y += dy;
-        enemies[j].x -= dx;
-        enemies[j].y -= dy;
+      let dx3 = enemies[i].x - enemies[j].x;
+      let dy3 = enemies[i].y - enemies[j].y;
+      let d3 = Math.hypot(dx3, dy3) || 1;
+      if (d3 < enemies[i].size) {
+        enemies[i].x += (dx3 / d3);
+        enemies[i].y += (dy3 / d3);
+        enemies[j].x -= (dx3 / d3);
+        enemies[j].y -= (dy3 / d3);
       }
     }
   }
 }
 
 function checkCollisions() {
-  for (let e of enemies) {
-    if (Math.hypot(player.x - e.x, player.y - e.y) < 20) {
-      gameOver = true;
-    }
+  // Player collision
+  if (enemies.some(e => Math.hypot(player.x - e.x, player.y - e.y) < player.size)) {
+    gameOver = true;
   }
+  // Projectile collisions
   enemies = enemies.filter(e => {
-    for (let p of projectiles) {
-      if (Math.hypot(p.x - e.x, p.y - e.y) < 15) return false;
-    }
+    const hit = projectiles.some(p => Math.hypot(p.x - e.x, p.y - e.y) < e.size);
+    if (hit) { score++; updateScore(); return false; }
     return true;
   });
 }
 
+function updateScore() {
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('space-highscore', highScore);
+    highScoreEl.textContent = `High Score: ${highScore}`;
+  }
+}
+
+function explodePlayer() {
+  ctx.fillStyle = 'red';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function gameLoop() {
+  if (!musicStarted) { bgMusic.play(); musicStarted = true; }
   if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "48px sans-serif";
-    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    explodePlayer();
+    bgMusic.pause();
+    ctx.fillStyle = 'white';
+    ctx.font = '48px sans-serif';
+    ctx.fillText('Game Over', canvas.width / 2 - 120, canvas.height / 2);
     return;
   }
   drawStars();
   movePlayer();
   drawPlayer();
-  drawProjectiles();
   updateProjectiles();
+  drawProjectiles();
   spawnEnemies();
-  drawEnemies();
   updateEnemies();
+  drawEnemies();
   checkCollisions();
   requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener("keydown", e => {
+// Input handlers
+document.addEventListener('keydown', e => {
   keys[e.key] = true;
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-    let dx = 0, dy = 0;
-    if (e.key === "ArrowUp") dy = -1;
-    if (e.key === "ArrowDown") dy = 1;
-    if (e.key === "ArrowLeft") dx = -1;
-    if (e.key === "ArrowRight") dx = 1;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    let dx=0, dy=0;
+    if(e.key==='ArrowUp') dy=-1;
+    if(e.key==='ArrowDown') dy=1;
+    if(e.key==='ArrowLeft') dx=-1;
+    if(e.key==='ArrowRight') dx=1;
     shoot(dx, dy);
   }
 });
-
-document.addEventListener("keyup", e => {
-  keys[e.key] = false;
-});
-
-canvas.addEventListener("click", e => {
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('click', e => {
   const rect = canvas.getBoundingClientRect();
-  const dx = e.clientX - rect.left - canvas.width / 2;
-  const dy = e.clientY - rect.top - canvas.height / 2;
-  shoot(dx, dy);
+  const mx = e.clientX - rect.left - canvas.width / 2;
+  const my = e.clientY - rect.top - canvas.height / 2;
+  shoot(mx, my);
 });
 
 gameLoop();
