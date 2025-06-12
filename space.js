@@ -186,17 +186,37 @@ function drawStartScreen() {
 // Play Again button
 function showPlayAgainButton() {
   if (document.getElementById('play-again')) return;
-  const btn=document.createElement('button'); btn.id='play-again'; btn.textContent='Play Again';
-  btn.style.position='absolute'; const rect=canvas.getBoundingClientRect();
-  btn.style.left=`${rect.left+canvas.width/2-50}px`;
-  btn.style.top=`${rect.top+canvas.height/2+20}px`;
+  const btn = document.createElement('button');
+  btn.id = 'play-again';
+  btn.textContent = 'Play Again';
+  btn.style.position = 'absolute';
+  const rect = canvas.getBoundingClientRect();
+  btn.style.left = `${rect.left + canvas.width/2 - 50}px`;
+  btn.style.top = `${rect.top + canvas.height/2 + 20}px`;
   document.body.appendChild(btn);
-  btn.addEventListener('click',()=>{
-    gameOver=false; gameStarted=false; score=0; spawnCount=1;
-    lastSpawn=Date.now(); lastCountIncrease=Date.now(); enemies=[];
-    projectiles=[]; resetStars(); btn.remove(); drawStartScreen();
+  btn.addEventListener('click', () => {
+    // Reset game state
+    gameOver = false;
+    gameStarted = false;
+    score = 0;
+    spawnCount = 1;
+    lastSpawn = Date.now();
+    lastCountIncrease = Date.now();
+    enemies = [];
+    projectiles = [];
+    resetStars();
+    // Reset player to center
+    player.x = worldWidth / 2;
+    player.y = worldHeight / 2;
+    // Remove button
+    btn.remove();
+    // Draw start screen and restart loop
+    drawStartScreen();
+    window.focus();
+    requestAnimationFrame(gameLoop);
   });
 }
+
 
 // Main loop
 function gameLoop() {
