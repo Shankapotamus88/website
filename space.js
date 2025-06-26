@@ -122,56 +122,56 @@ function spawnEnemies() {
 }
 
 function updateEnemies() {
+  const half = e => e.size / 2;
+
   enemies.forEach(e => {
+    // 1) Movement
     if (e.type === 'red') {
-      // existing bounce logic on world edges
-      e.x += e.dx; e.y += e.dy;
-      if (e.x < 0 || e.x > worldWidth) e.dx *= -1;
-      if (e.y < 0 || e.y > worldHeight) e.dy *= -1;
+      // bounce‐movement
+      e.x += e.dx;
+      e.y += e.dy;
+      if (e.x - half(e) < 0 || e.x + half(e) > worldWidth) e.dx *= -1;
+      if (e.y - half(e) < 0 || e.y + half(e) > worldHeight) e.dy *= -1;
     } else {
-      // chase logic
+      // chase
       const dx1 = player.x - e.x, dy1 = player.y - e.y;
       const d1 = Math.hypot(dx1, dy1) || 1;
-      const chaseSpeed = 2 * SPEED_FACTOR;
-      e.x += (dx1 / d1) * chaseSpeed;
-      e.y += (dy1 / d1) * chaseSpeed;
-
-      // dodge projectiles for purple
+      e.x += (dx1 / d1) * (2 * SPEED_FACTOR);
+      e.y += (dy1 / d1) * (2 * SPEED_FACTOR);
+      // dodge for purple
       if (e.type === 'purple') {
         projectiles.forEach(p => {
           const dx2 = p.x - e.x, dy2 = p.y - e.y;
           const d2 = Math.hypot(dx2, dy2) || 1;
-          const dodgeSpeed = 2 * SPEED_FACTOR;
           if (d2 < 100) {
-            e.x -= (dx2 / d2) * dodgeSpeed;
-            e.y -= (dy2 / d2) * dodgeSpeed;
+            e.x -= (dx2 / d2) * (2 * SPEED_FACTOR);
+            e.y -= (dy2 / d2) * (2 * SPEED_FACTOR);
           }
         });
       }
     }
 
-    // ** new clamp step **
-    // keep every enemy fully inside the world bounds
-    const half = e.size / 2;
-    e.x = clamp(e.x, half, worldWidth  - half);
-    e.y = clamp(e.y, half, worldHeight - half);
+    // 2) Clamp inside the *world* bounds
+    e.x = clamp(e.x, half(e), worldWidth  - half(e));
+    e.y = clamp(e.y, half(e), worldHeight - half(e));
   });
 
-  // separate separation logic remains unchanged
+  // 3) Separation (unchanged)
   for (let i = 0; i < enemies.length; i++) {
     for (let j = i + 1; j < enemies.length; j++) {
-      const dx3 = enemies[i].x - enemies[j].x,
-            dy3 = enemies[i].y - enemies[j].y;
-      const d3 = Math.hypot(dx3, dy3) || 1;
-      if (d3 < enemies[i].size) {
-        enemies[i].x += dx3 / d3;
-        enemies[i].y += dy3 / d3;
-        enemies[j].x -= dx3 / d3;
-        enemies[j].y -= dy3 / d3;
+      const a = enemies[i], b = enemies[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist < a.size) {
+        a.x += (dx / dist);
+        a.y += (dy / dist);
+        b.x -= (dx / dist);
+        b.y -= (dy / dist);
       }
     }
   }
 }
+
 
 // Collision & scoring
 function checkCollisions() {
